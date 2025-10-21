@@ -1,26 +1,881 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:is(.dark *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Updated color tokens to match design brief with purple, white, and blue palette */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.15 0.02 258.34);
+  --card: oklch(0.98 0.01 258.34);
+  --card-foreground: oklch(0.15 0.02 258.34);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.15 0.02 258.34);
+  --primary: oklch(0.55 0.18 280.5);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.65 0.15 240.8);
+  --secondary-foreground: oklch(1 0 0);
+  --muted: oklch(0.96 0.01 258.34);
+  --muted-foreground: oklch(0.45 0.02 258.34);
+  --accent: oklch(0.65 0.15 240.8);
+  --accent-foreground: oklch(1 0 0);
+  --destructive: oklch(0.55 0.22 27.33);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.92 0.01 258.34);
+  --input: oklch(1 0 0);
+  --ring: oklch(0.55 0.18 280.5 / 0.5);
+  --chart-1: oklch(0.55 0.18 280.5);
+  --chart-2: oklch(0.65 0.15 240.8);
+  --chart-3: oklch(0.45 0.2 300.2);
+  --chart-4: oklch(0.75 0.12 220.4);
+  --chart-5: oklch(0.6 0.15 260.6);
+  --radius: 0.5rem;
+  --sidebar: oklch(0.96 0.01 258.34);
+  --sidebar-foreground: oklch(0.15 0.02 258.34);
+  --sidebar-primary: oklch(0.55 0.18 280.5);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.65 0.15 240.8);
+  --sidebar-accent-foreground: oklch(1 0 0);
+  --sidebar-border: oklch(0.92 0.01 258.34);
+  --sidebar-ring: oklch(0.55 0.18 280.5 / 0.5);
+}
+
+.dark {
+  /* Updated dark mode tokens to maintain purple, white, and blue theme */
+  --background: oklch(0.08 0.01 258.34);
+  --foreground: oklch(0.98 0 0);
+  --card: oklch(0.12 0.01 258.34);
+  --card-foreground: oklch(0.98 0 0);
+  --popover: oklch(0.08 0.01 258.34);
+  --popover-foreground: oklch(0.98 0 0);
+  --primary: oklch(0.65 0.18 280.5);
+  --primary-foreground: oklch(0.08 0.01 258.34);
+  --secondary: oklch(0.25 0.02 258.34);
+  --secondary-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.18 0.01 258.34);
+  --muted-foreground: oklch(0.65 0.01 258.34);
+  --accent: oklch(0.75 0.15 240.8);
+  --accent-foreground: oklch(0.08 0.01 258.34);
+  --destructive: oklch(0.55 0.22 27.33);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.25 0.02 258.34);
+  --input: oklch(0.18 0.01 258.34);
+  --ring: oklch(0.65 0.18 280.5 / 0.5);
+  --chart-1: oklch(0.65 0.18 280.5);
+  --chart-2: oklch(0.75 0.15 240.8);
+  --chart-3: oklch(0.55 0.2 300.2);
+  --chart-4: oklch(0.85 0.12 220.4);
+  --chart-5: oklch(0.7 0.15 260.6);
+  --sidebar: oklch(0.12 0.01 258.34);
+  --sidebar-foreground: oklch(0.98 0 0);
+  --sidebar-primary: oklch(0.65 0.18 280.5);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.25 0.02 258.34);
+  --sidebar-accent-foreground: oklch(0.98 0 0);
+  --sidebar-border: oklch(0.25 0.02 258.34);
+  --sidebar-ring: oklch(0.65 0.18 280.5 / 0.5);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    border-color: var(--border);
+    outline-color: var(--ring);
+  }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* =====================
+   🎨 SCROLLBAR PERSONALIZADA
+===================== */
+
+/* Estilos para Webkit (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+  border-radius: 3px;
+  transition: all 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--foreground);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Estilos para Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted-foreground) transparent;
+}
+
+/* Estilos específicos para modo oscuro */
+.dark ::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: var(--foreground);
+}
+
+.dark * {
+  scrollbar-color: var(--muted-foreground) transparent;
+}
+
+/* Estilos para elementos específicos con scroll */
+.scroll-area ::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.scroll-area ::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+  border-radius: 2px;
+}
+
+.scroll-area ::-webkit-scrollbar-thumb:hover {
+  background: var(--foreground);
+}
+
+/* Estilos para chat sidebar */
+.chat-sidebar ::-webkit-scrollbar {
+  width: 3px;
+}
+
+.chat-sidebar ::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+  border-radius: 1.5px;
+}
+
+.chat-sidebar ::-webkit-scrollbar-thumb:hover {
+  background: var(--foreground);
+}
+
+/* Estilos para message list */
+.message-list ::-webkit-scrollbar {
+  width: 4px;
+}
+
+.message-list ::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+  border-radius: 2px;
+}
+
+.message-list ::-webkit-scrollbar-thumb:hover {
+  background: var(--foreground);
+}
+
+/* Animación suave para la barra de desplazamiento */
+::-webkit-scrollbar-thumb {
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+/* Ocultar scrollbar cuando no se está usando */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Scrollbar más sutil para elementos pequeños */
+.scrollbar-minimal ::-webkit-scrollbar {
+  width: 2px;
+  height: 2px;
+}
+
+.scrollbar-minimal ::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+  border-radius: 1px;
+  opacity: 0.5;
+}
+
+.scrollbar-minimal ::-webkit-scrollbar-thumb:hover {
+  background: var(--foreground);
+  opacity: 1;
+}
+
+/* Scrollbar para bloques de código - compatible con todos los navegadores */
+.code-block-scroll {
+  /* Firefox */
+  scrollbar-width: auto;
+  scrollbar-color: rgba(255, 255, 255, 0.8) rgba(255, 255, 255, 0.2);
+  
+  /* Forzar que el scrollbar sea visible en todos los navegadores */
+  overflow-x: auto !important;
+  overflow-y: hidden;
+  
+  /* Asegurar que el scrollbar sea visible */
+  scrollbar-gutter: stable;
+}
+
+/* Tema claro para bloques de código */
+.code-block-scroll pre {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+.code-block-scroll code {
+  color: #1a1a1a !important;
+}
+
+/* Tema oscuro para bloques de código */
+.dark .code-block-scroll pre {
+  background: #1e1e1e !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark .code-block-scroll code {
+  color: #d4d4d4 !important;
+}
+
+/* WebKit (Chrome, Safari, Edge) */
+.code-block-scroll ::-webkit-scrollbar {
+  width: 16px;
+  height: 16px;
+  /* Asegurar que el scrollbar sea visible */
+  display: block !important;
+  -webkit-appearance: none;
+}
+
+.code-block-scroll ::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  margin: 2px;
+  /* Hacer el track más visible */
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  -webkit-box-shadow: inset 0 0 2px rgba(255, 255, 255, 0.1);
+}
+
+.code-block-scroll ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  /* Hacer el thumb más visible */
+  min-height: 24px;
+  min-width: 24px;
+  -webkit-box-shadow: 0 0 4px rgba(255, 255, 255, 0.3);
+}
+
+.code-block-scroll ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.9);
+  background-clip: content-box;
+  -webkit-box-shadow: 0 0 6px rgba(255, 255, 255, 0.5);
+}
+
+.code-block-scroll ::-webkit-scrollbar-thumb:active {
+  background: rgba(255, 255, 255, 1);
+  background-clip: content-box;
+  -webkit-box-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
+}
+
+.code-block-scroll ::-webkit-scrollbar-corner {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Asegurar que el scrollbar sea visible incluso sin hover */
+.code-block-scroll ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.8) !important;
+  background-clip: content-box;
+}
+
+/* Forzar visibilidad del scrollbar en bloques de código */
+.code-block-scroll:hover ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.9) !important;
+  background-clip: content-box;
+}
+
+/* Asegurar que el scrollbar sea visible en Edge */
+@supports (-ms-ime-align: auto) {
+  .code-block-scroll {
+    scrollbar-width: auto;
+    scrollbar-color: rgba(255, 255, 255, 0.8) rgba(255, 255, 255, 0.2);
+  }
+}
+
+/* Asegurar que el scrollbar sea visible en Internet Explorer */
+@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+  .code-block-scroll {
+    scrollbar-width: auto;
+    scrollbar-color: rgba(255, 255, 255, 0.8) rgba(255, 255, 255, 0.2);
+  }
+}
+
+/* Reglas específicas para Edge (Chromium) */
+@supports (display: -webkit-box) {
+  .code-block-scroll {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+  }
+  
+  .code-block-scroll ::-webkit-scrollbar {
+    width: 16px !important;
+    height: 16px !important;
+    display: block !important;
+  }
+  
+  .code-block-scroll ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.8) !important;
+    border-radius: 8px !important;
+    border: 2px solid transparent !important;
+    background-clip: content-box !important;
+  }
+}
+
+/* Forzar scrollbar visible en Edge */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  .code-block-scroll {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+  }
+}
+
+/* =====================
+   🖱️ CURSOR POINTER PARA BOTONES
+===================== */
+
+/* Todos los botones deben tener cursor pointer */
+button,
+[role="button"],
+button[type="button"],
+button[type="submit"],
+button[type="reset"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+.cursor-pointer {
+  cursor: pointer !important;
+}
+
+/* Elementos clickeables también deben tener cursor pointer */
+[onclick],
+[onClick],
+.clickable,
+a[href],
+[tabindex]:not([tabindex="-1"]) {
+  cursor: pointer !important;
+}
+
+/* Asegurar que los botones de UI tengan cursor pointer */
+[data-radix-collection-item],
+[data-state],
+[aria-pressed],
+[aria-expanded] {
+  cursor: pointer !important;
+}
+
+/* Elementos interactivos específicos */
+button:disabled,
+[aria-disabled="true"],
+.disabled {
+  cursor: not-allowed !important;
+}
+
+/* Asegurar que no haya overflow horizontal */
+* {
+  box-sizing: border-box;
+}
+
+/* Clases de utilidad para contenido responsivo */
+.break-words {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.overflow-wrap-anywhere {
+  overflow-wrap: anywhere;
+}
+
+/* Asegurar que los contenedores flex no causen overflow */
+.flex-container {
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* =====================
+   💬 CHAT STYLES
+===================== */
+
+/* Line clamp utilities */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+/* Chat message animations */
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message-enter {
+  animation: messageSlideIn 0.3s ease-out;
+}
+
+/* Typing indicator */
+@keyframes typing {
+  0%, 60%, 100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-10px);
+  }
+}
+
+.typing-dot {
+  animation: typing 1.4s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+/* File upload drag and drop */
+.drag-over {
+  border-color: var(--primary) !important;
+  background-color: var(--primary) / 0.05 !important;
+}
+
+/* Scrollbar for chat messages */
+.chat-messages {
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted-foreground) transparent;
+}
+
+.chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+  border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: var(--foreground);
+}
+
+/* Message animations */
+.message-enter {
+  animation: messageSlideIn 0.3s ease-out;
+}
+
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Typing animation for streaming messages */
+.message-bubble {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Smooth transitions for markdown content */
+.prose {
+  transition: opacity 0.2s ease-in-out;
+}
+
+/* Highlight.js theme adjustments */
+.hljs {
+  background: var(--muted) !important;
+  color: var(--foreground) !important;
+}
+
+.dark .hljs {
+  background: var(--card) !important;
+  color: var(--foreground) !important;
+}
+
+/* Responsive chat layout */
+@media (max-width: 768px) {
+  .chat-sidebar {
+    position: fixed;
+    left: -100%;
+    top: 0;
+    height: 100vh;
+    z-index: 50;
+    transition: left 0.3s ease;
+  }
+  
+  .chat-sidebar.open {
+    left: 0;
+  }
+  
+  .chat-main {
+    width: 100%;
+  }
+}
+
+/* Message bubble hover effects */
+.message-bubble {
+  transition: all 0.2s ease;
+}
+
+.message-bubble:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* File preview styles */
+.file-preview {
+  transition: all 0.2s ease;
+}
+
+.file-preview:hover {
+  transform: scale(1.02);
+}
+
+/* Loading states */
+.loading-shimmer {
+  background: linear-gradient(90deg, var(--muted) 25%, var(--muted-foreground) / 0.1 50%, var(--muted) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* =====================
+   🌈 GRADIENTE DINÁMICO
+===================== */
+
+@keyframes gradient-x {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient-x {
+  animation: gradient-x 3s ease infinite;
+}
+
+/* =====================
+   💬 ANIMACIONES DE MENSAJES
+===================== */
+
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes messageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-message-slide-in {
+  animation: messageSlideIn 0.4s ease-out;
+}
+
+.animate-message-fade-in {
+  animation: messageFadeIn 0.3s ease-out;
+}
+
+/* =====================
+   🎭 ANIMACIONES DEL DROPDOWN DE PERFIL
+===================== */
+
+@keyframes dropdownSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes dropdownSlideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+}
+
+@keyframes overlayFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes overlayFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.animate-dropdown-enter {
+  animation: dropdownSlideIn 0.2s ease-out;
+}
+
+.animate-dropdown-exit {
+  animation: dropdownSlideOut 0.15s ease-in;
+}
+
+.animate-overlay-enter {
+  animation: overlayFadeIn 0.2s ease-out;
+}
+
+.animate-overlay-exit {
+  animation: overlayFadeOut 0.15s ease-in;
+}
+
+/* =====================
+   📝 ESTILOS DE MARKDOWN NATIVO
+===================== */
+
+/* Prose styling for markdown content - minimal and native */
+.prose {
+  color: inherit;
+  line-height: 1.6;
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+  color: inherit;
+  font-weight: 600;
+  margin-top: 1.2em;
+  margin-bottom: 0.4em;
+}
+
+.prose h1 {
+  font-size: 1.4em;
+}
+
+.prose h2 {
+  font-size: 1.2em;
+}
+
+.prose h3 {
+  font-size: 1.1em;
+}
+
+.prose p {
+  margin: 0.4em 0;
+}
+
+.prose ul, .prose ol {
+  margin: 0.4em 0;
+  padding-left: 1.2em;
+}
+
+.prose li {
+  margin: 0.1em 0;
+}
+
+.prose blockquote {
+  margin: 0.8em 0;
+  padding-left: 0.8em;
+  border-left: 2px solid hsl(var(--muted-foreground));
+  font-style: italic;
+  color: hsl(var(--muted-foreground));
+}
+
+/* Código inline - sutil pero diferenciado */
+.prose code {
+  background: hsl(var(--muted) / 0.5);
+  padding: 0.1em 0.3em;
+  border-radius: 0.2em;
+  font-size: 0.9em;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  color: hsl(var(--foreground));
+  border: 1px solid hsl(var(--border) / 0.3);
+}
+
+/* Bloques de código - más prominentes */
+.prose pre {
+  background: hsl(var(--muted));
+  padding: 0.8em;
+  border-radius: 0.4em;
+  overflow-x: auto;
+  margin: 0.8em 0;
+  border: 1px solid hsl(var(--border));
+}
+
+.prose pre code {
+  background: transparent;
+  padding: 0;
+  border: none;
+  color: inherit;
+}
+
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.8em 0;
+  font-size: 0.9em;
+}
+
+.prose th, .prose td {
+  border: 1px solid hsl(var(--border));
+  padding: 0.4em 0.6em;
+  text-align: left;
+}
+
+.prose th {
+  background: hsl(var(--muted) / 0.5);
+  font-weight: 600;
+}
+
+.prose a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+}
+
+.prose a:hover {
+  text-decoration: none;
+}
+
+.prose strong {
+  font-weight: 600;
+}
+
+.prose em {
+  font-style: italic;
+}
+
+.prose hr {
+  border: none;
+  border-top: 1px solid hsl(var(--border));
+  margin: 1.5em 0;
+}
+
+/* Dark mode adjustments */
+.dark .prose code {
+  background: hsl(var(--muted) / 0.3);
+  color: hsl(var(--foreground));
+  border-color: hsl(var(--border) / 0.5);
+}
+
+.dark .prose pre {
+  background: hsl(var(--muted));
+  border-color: hsl(var(--border));
+}
+
+.dark .prose th {
+  background: hsl(var(--muted) / 0.3);
 }
