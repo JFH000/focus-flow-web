@@ -1,7 +1,6 @@
 'use client'
 
 import { useAuth } from '@/contexts/AuthContext'
-import { useHealthCheck } from '@/hooks/useHealthCheck'
 import { createClient } from '@/lib/supabase/client'
 import { Chat, ChatInsert, ChatWithMessages, Message, MessageInsert } from '@/types/database'
 import { useRouter } from 'next/navigation'
@@ -29,9 +28,19 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(false)
   const [loadingMessages, setLoadingMessages] = useState(false)
   const { user } = useAuth()
-  const { isHealthy } = useHealthCheck()
   const supabase = createClient()
   const router = useRouter()
+
+  // Load user's chats when user changes
+  useEffect(() => {
+    if (user) {
+      loadChats()
+    } else {
+      setChats([])
+      setCurrentChat(null)
+      setMessages([])
+    }
+  }, [user])
 
   const loadChats = useCallback(async () => {
     if (!user) return
@@ -54,17 +63,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       console.error('Error loading chats:', error)
     }
   }, [user, supabase])
-
-  // Load user's chats when user changes
-  useEffect(() => {
-    if (user) {
-      loadChats()
-    } else {
-      setChats([])
-      setCurrentChat(null)
-      setMessages([])
-    }
-  }, [user, loadChats])
 
   const createChat = useCallback(async (title: string, contextType: string = 'general'): Promise<Chat | null> => {
     if (!user) return null
@@ -212,7 +210,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       const webhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_CHAT_HOST
       let aiContent = ''
 
-      if (webhookUrl && isHealthy) {
+      if (webhookUrl) {
         try {
           const requestBody = {
             message: content,
@@ -302,9 +300,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           console.error('Error calling n8n webhook:', error)
           aiContent = `Error al procesar tu mensaje: ${error instanceof Error ? error.message : 'Error desconocido'}`
         }
-      } else if (!isHealthy) {
-        // Contenedor no está disponible
-        aiContent = `El contenedor de IA está iniciando. Por favor, espera unos momentos y vuelve a intentar.`
       } else {
         // Fallback to simulated response if no webhook URL
         aiContent = `Gracias por tu mensaje: "${content}". Esta es una respuesta simulada de la IA.`
@@ -316,7 +311,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         user_id: user.id,
         role: 'assistant',
         content: aiContent,
-        model_used: webhookUrl && isHealthy ? 'n8n-ai' : 'simulated-ai'
+        model_used: webhookUrl ? 'n8n-ai' : 'simulated-ai'
       }
 
       const { data: aiMessageData, error: aiMessageError } = await supabase
@@ -361,7 +356,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false)
     }
-  }, [user, supabase, currentChat, createChat, loadChat, router, isHealthy])
+  }, [user, supabase, currentChat, createChat, loadChat, router])
 
   const clearCurrentChat = useCallback(() => {
     setCurrentChat(null)

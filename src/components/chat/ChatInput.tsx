@@ -1,7 +1,6 @@
 'use client'
 
 import { useChat } from '@/contexts/ChatContext'
-import { useHealthCheck } from '@/hooks/useHealthCheck'
 import { getSignedFileUrl } from '@/utils/fileAccess'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
@@ -31,7 +30,6 @@ export default function ChatInput({
   const [showHistory, setShowHistory] = useState(false)
   const [showButtons, setShowButtons] = useState(true)
   const { sendMessage, loading, currentChat, chats, loading: loadingChats } = useChat()
-  const { isHealthy } = useHealthCheck()
   const router = useRouter()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -126,7 +124,7 @@ export default function ChatInput({
 
         // Call n8n webhook to add PDF to RAG
         const ragWebhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_ADD_PDF_TO_RAG_HOST
-        if (ragWebhookUrl && isHealthy) {
+        if (ragWebhookUrl) {
           try {
             const response = await fetch(ragWebhookUrl, {
               method: 'POST',
@@ -165,15 +163,6 @@ export default function ChatInput({
               } : f
             ))
           }
-        } else if (!isHealthy) {
-          // Contenedor no está disponible
-          setUploadingFiles(prev => prev.map(f => 
-            f.id === fileId ? { 
-              ...f, 
-              status: 'error', 
-              error: 'El contenedor de IA está iniciando. El archivo se subió pero no se procesó.'
-            } : f
-          ))
         } else {
           // No webhook, mark as completed
           setUploadingFiles(prev => prev.map(f => 

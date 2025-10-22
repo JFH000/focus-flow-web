@@ -2,7 +2,6 @@
 
 import { useAuth } from '@/contexts/AuthContext'
 import { usePathname } from 'next/navigation'
-import HealthStatus from './HealthStatus'
 import Navbar from './Navbar'
 
 interface AppLayoutProps {
@@ -38,7 +37,6 @@ export default function AppLayout({ children, showNavbar = true }: AppLayoutProp
   return (
     <div className={isDashboardPage ? 'h-screen bg-background overflow-hidden' : 'min-h-screen bg-background'}>
       {showNavbar && <Navbar />}
-      <HealthStatus />
       <main className={isChatPage ? 'h-screen pt-12' : isDashboardPage ? 'h-screen pt-12 overflow-hidden' : showNavbar ? 'pt-12' : ''}>
         {children}
       </main>
