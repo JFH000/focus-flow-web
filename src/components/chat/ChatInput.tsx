@@ -320,7 +320,7 @@ export default function ChatInput({
         <div className="pb-2 px-4 flex justify-center">
           <div className="w-full max-w-4xl mx-auto">
             {/* All buttons inside the input area */}
-            <div className="flex items-center gap-2 p-3 bg-background/95 backdrop-blur-sm shadow-lg rounded-3xl border border-border">
+            <div className="flex items-center gap-2 p-3 bg-gradient-to-r from-purple-600/10 via-blue-600/10 to-purple-600/10 backdrop-blur-xl shadow-lg rounded-3xl border border-purple-500/20">
               {/* Toggle buttons visibility - outside form but inside input container */}
               <button
                 onClick={() => setShowButtons(!showButtons)}
