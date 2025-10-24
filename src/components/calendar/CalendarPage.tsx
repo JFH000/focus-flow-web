@@ -1,5 +1,6 @@
 'use client'
 
+import { useAuth } from '@/contexts/AuthContext'
 import { useGoogleCalendar } from '@/hooks/useGoogleCalendar'
 import { createClient } from '@/lib/supabase/client'
 import { addDays, endOfWeek, format, isSameDay, startOfDay, startOfWeek } from 'date-fns'
@@ -386,6 +387,7 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
   const { start, end } = useMemo(() => getWeekRange(anchor), [anchor])
   const { events, refreshEvents } = useUserEvents(anchor)
   const { syncEvents, createEvent, removeDuplicates, error: syncError } = useGoogleCalendar()
+  const { session, connectGoogleCalendar, loading: authLoading } = useAuth()
   const [syncMessage, setSyncMessage] = useState<string | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>()
@@ -393,8 +395,44 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
   const [expandedEvent, setExpandedEvent] = useState<string | null>(null)
   const [isUpdating, setIsUpdating] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
+  const [hasCalendarAccess, setHasCalendarAccess] = useState(false)
 
   const days = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(start, i)), [start])
+
+  // Check if user has Google Calendar access
+  useEffect(() => {
+    const checkCalendarAccess = async () => {
+      if (!session?.provider_token) {
+        setHasCalendarAccess(false)
+        return
+      }
+
+      try {
+        // Test if the token has calendar permissions by making a simple API call
+        const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${session.provider_token}`,
+            'Content-Type': 'application/json',
+          }
+        })
+
+        if (response.ok) {
+          setHasCalendarAccess(true)
+        } else if (response.status === 403) {
+          // Token exists but doesn't have calendar permissions
+          setHasCalendarAccess(false)
+        } else {
+          setHasCalendarAccess(false)
+        }
+      } catch (error) {
+        console.error('Error checking calendar access:', error)
+        setHasCalendarAccess(false)
+      }
+    }
+
+    checkCalendarAccess()
+  }, [session])
 
   // Autoscroll hasta la mitad de la página al cargar
   useEffect(() => {
@@ -464,6 +502,15 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
       await refreshEvents()
     } catch (error) {
       console.error('Error creating event:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
+      
+      // Check if it's a permissions error
+      if (errorMessage.includes('PERMISSIONS_REQUIRED')) {
+        setSyncMessage('❌ Necesitas conectar tu Google Calendar para crear eventos')
+        setHasCalendarAccess(false)
+        throw new Error('Necesitas conectar tu Google Calendar para crear eventos. Haz clic en "Conectar Google Calendar" en la parte superior.')
+      }
+      
       throw error
     }
   }
@@ -503,7 +550,15 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
     } catch (error) {
       console.error('Error syncing with Google:', error)
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
-      setSyncMessage(`Error en la sincronización: ${errorMessage}`)
+      
+      // Check if it's a permissions error
+      if (errorMessage.includes('PERMISSIONS_REQUIRED')) {
+        setSyncMessage('❌ Necesitas conectar tu Google Calendar primero')
+        // Update the calendar access state
+        setHasCalendarAccess(false)
+      } else {
+        setSyncMessage(`Error en la sincronización: ${errorMessage}`)
+      }
       setTimeout(() => setSyncMessage(null), 5000)
     } finally {
       setIsSyncing(false)
@@ -601,42 +656,77 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Botones de actualización */}
-          <button
-            onClick={handleUpdateFromDB}
-            disabled={isUpdating}
-            className="p-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 transition-colors flex items-center gap-2"
-            title="Actualizar desde BD (cada 1 min)"
-          >
-            {isUpdating ? (
-              <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-            ) : (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-            )}
-            <span className="text-xs">BD</span>
-          </button>
-          
-          <button
-            onClick={handleSyncWithGoogle}
-            disabled={isSyncing}
-            className="p-2 rounded-md bg-green-500 text-white hover:bg-green-600 disabled:opacity-50 transition-colors flex items-center gap-2"
-            title="Sincronizar con Google (cada 5 min)"
-          >
-            {isSyncing ? (
-              <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-            ) : (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9" />
-              </svg>
-            )}
-            <span className="text-xs">Google</span>
-          </button>
+          {/* Google Calendar Connection Button - Only show if no access */}
+          {!hasCalendarAccess && (
+            <button
+              onClick={connectGoogleCalendar}
+              disabled={authLoading}
+              className="px-4 py-2 rounded-md bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 disabled:opacity-50 transition-all duration-200 flex items-center gap-2 shadow-lg"
+              title="Conectar con Google Calendar para sincronizar eventos"
+            >
+              {authLoading ? (
+                <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              )}
+              <span className="text-sm font-medium">
+                {authLoading ? 'Conectando...' : 'Conectar Google Calendar'}
+              </span>
+            </button>
+          )}
+
+          {/* Status indicator - Only show if connected */}
+          {hasCalendarAccess && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-green-100 text-green-800 border border-green-200">
+              <div className="w-2 h-2 rounded-full bg-green-500"></div>
+              <span className="text-sm font-medium">Google Calendar Conectado</span>
+            </div>
+          )}
+
+          {/* Botones de actualización - Only show if connected */}
+          {hasCalendarAccess && (
+            <>
+              <button
+                onClick={handleUpdateFromDB}
+                disabled={isUpdating}
+                className="p-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 transition-colors flex items-center gap-2"
+                title="Actualizar desde base de datos"
+              >
+                {isUpdating ? (
+                  <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                )}
+                <span className="text-xs">BD</span>
+              </button>
+              
+              <button
+                onClick={handleSyncWithGoogle}
+                disabled={isSyncing}
+                className="p-2 rounded-md bg-green-500 text-white hover:bg-green-600 disabled:opacity-50 transition-colors flex items-center gap-2"
+                title="Sincronizar con Google Calendar"
+              >
+                {isSyncing ? (
+                  <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9" />
+                  </svg>
+                )}
+                <span className="text-xs">Google</span>
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -648,6 +738,27 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
           'bg-blue-100 text-blue-800'
         }`}>
           {syncMessage || syncError}
+        </div>
+      )}
+
+      {/* Info message when no calendar access */}
+      {!hasCalendarAccess && (
+        <div className="px-6 py-4 bg-blue-50 border-l-4 border-blue-400 text-blue-800">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-blue-800">
+                Conecta tu Google Calendar
+              </h3>
+              <div className="mt-1 text-sm text-blue-700">
+                <p>Para sincronizar tus eventos con Google Calendar, necesitas conectar tu cuenta. Haz clic en el botón &quot;Conectar Google Calendar&quot; en la parte superior.</p>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

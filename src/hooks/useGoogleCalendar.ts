@@ -103,6 +103,20 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
         if (response.status === 401) {
           throw new Error('Token de Google expirado. Por favor, cierra sesión y vuelve a iniciar.')
         }
+        
+        if (response.status === 403) {
+          const errorText = await response.text()
+          try {
+            const errorData = JSON.parse(errorText)
+            if (errorData.error?.details?.[0]?.reason === 'ACCESS_TOKEN_SCOPE_INSUFFICIENT') {
+              throw new Error('PERMISSIONS_REQUIRED: Necesitas conectar tu Google Calendar para crear eventos. Haz clic en "Conectar Google Calendar" en la parte superior.')
+            }
+          } catch {
+            // If we can't parse the error, fall back to generic message
+          }
+          throw new Error('No tienes permisos para acceder al calendario. Por favor, conecta tu Google Calendar.')
+        }
+        
         throw new Error(`Error de Google Calendar: ${response.status}`)
       }
 
@@ -198,9 +212,24 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
       if (!response.ok) {
         const errorText = await response.text()
         console.error('❌ Error de Google Calendar:', errorText)
+        
         if (response.status === 401) {
           throw new Error('Token de Google expirado. Por favor, cierra sesión y vuelve a iniciar.')
         }
+        
+        if (response.status === 403) {
+          // Check if it's a scope issue
+          try {
+            const errorData = JSON.parse(errorText)
+            if (errorData.error?.details?.[0]?.reason === 'ACCESS_TOKEN_SCOPE_INSUFFICIENT') {
+              throw new Error('PERMISSIONS_REQUIRED: Necesitas conectar tu Google Calendar para sincronizar eventos. Haz clic en "Conectar Google Calendar" en la parte superior.')
+            }
+          } catch {
+            // If we can't parse the error, fall back to generic message
+          }
+          throw new Error('No tienes permisos para acceder al calendario. Por favor, conecta tu Google Calendar.')
+        }
+        
         throw new Error(`Error de Google Calendar: ${response.status} - ${errorText}`)
       }
 

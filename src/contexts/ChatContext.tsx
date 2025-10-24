@@ -31,17 +31,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const supabase = createClient()
   const router = useRouter()
 
-  // Load user's chats when user changes
-  useEffect(() => {
-    if (user) {
-      loadChats()
-    } else {
-      setChats([])
-      setCurrentChat(null)
-      setMessages([])
-    }
-  }, [user])
-
   const loadChats = useCallback(async () => {
     if (!user) return
 
@@ -63,6 +52,17 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       console.error('Error loading chats:', error)
     }
   }, [user, supabase])
+
+  // Load user's chats when user changes
+  useEffect(() => {
+    if (user) {
+      loadChats()
+    } else {
+      setChats([])
+      setCurrentChat(null)
+      setMessages([])
+    }
+  }, [user, loadChats])
 
   const createChat = useCallback(async (title: string, contextType: string = 'general'): Promise<Chat | null> => {
     if (!user) return null
