@@ -1,14 +1,14 @@
 "use client"
 
-import { useAuth } from '@/contexts/AuthContext'
-import { useTheme } from '@/contexts/ThemeContext'
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Brain, Calendar, FileText, Sparkles, Moon, Sun, Monitor } from "lucide-react"
+import { useAuth } from '@/contexts/AuthContext'
+import { useTheme } from '@/contexts/ThemeContext'
+import { Brain, Calendar, FileText, Monitor, Moon, Sparkles, Sun } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { useState, useEffect } from "react"
 import { useRouter } from 'next/navigation'
+import { useEffect, useState } from "react"
 
 export default function LoginPage() {
   const { user, loading, signInWithGoogle } = useAuth()
@@ -104,9 +104,9 @@ export default function LoginPage() {
               alt="FocusFlow Logo"
               width={48}
               height={48}
-              className="transition-transform group-hover:scale-110"
+              className="transition-transform group-hover:scale-110 rounded-lg"
             />
-            <span className="text-3xl font-bold bg-gradient-to-r from-primary via-purple-500 to-primary bg-clip-text text-transparent">
+            <span className="text-3xl font-bold bg-gradient-to-r from-primary via-purple-500 to-primary bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
               FocusFlow
             </span>
           </Link>
@@ -115,7 +115,7 @@ export default function LoginPage() {
           <div className="mb-12">
             <h1 className="text-4xl xl:text-5xl font-bold mb-4 text-balance">
               Tu compañero de estudio con{" "}
-              <span className="bg-gradient-to-r from-primary via-purple-500 to-primary bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-primary via-purple-500 to-primary bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
                 Inteligencia Artificial
               </span>
             </h1>
@@ -145,8 +145,8 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
           <Link href="/" className="lg:hidden flex items-center justify-center gap-3 mb-8">
-            <Image src="/focusflow-logo.png" alt="FocusFlow Logo" width={40} height={40} />
-            <span className="text-2xl font-bold bg-gradient-to-r from-primary via-purple-500 to-primary bg-clip-text text-transparent">
+            <Image src="/focusflow-logo.png" alt="FocusFlow Logo" width={40} height={40} className="rounded-lg" />
+            <span className="text-2xl font-bold bg-gradient-to-r from-primary via-purple-500 to-primary bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
               FocusFlow
             </span>
           </Link>
