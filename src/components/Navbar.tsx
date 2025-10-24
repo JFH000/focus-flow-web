@@ -32,7 +32,7 @@ export default function Navbar({ className = "" }: NavbarProps) {
       className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-gradient-to-r from-purple-600/10 via-blue-600/10 to-purple-600/10 border-b border-purple-500/20 ${className}`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-12">
           {/* Logo and Brand */}
           <div className="flex items-center space-x-3">
             <button onClick={() => router.push("/foco")} className="flex items-center gap-3 group">
@@ -48,21 +48,21 @@ export default function Navbar({ className = "" }: NavbarProps) {
             <div className="relative">
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center space-x-3 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600/10 to-blue-600/10 hover:from-purple-600/20 hover:to-blue-600/20 border border-purple-500/20 hover:border-purple-500/40 transition-all duration-300 group"
+                className="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-600/10 to-blue-600/10 hover:from-purple-600/20 hover:to-blue-600/20 border border-purple-500/20 hover:border-purple-500/40 transition-all duration-300 group"
               >
                 {/* Profile picture */}
-                <div className="relative w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 p-[2px] group-hover:scale-105 transition-transform">
+                <div className="relative w-6 h-6 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 p-[1px] group-hover:scale-105 transition-transform">
                   <div className="w-full h-full rounded-full bg-background flex items-center justify-center overflow-hidden">
                     {user?.user_metadata?.avatar_url ? (
                       <Image
                         src={user.user_metadata.avatar_url || "/placeholder.svg"}
                         alt="Profile"
-                        width={32}
-                        height={32}
+                        width={24}
+                        height={24}
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <svg className="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 text-purple-600" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                       </svg>
                     )}
@@ -71,14 +71,14 @@ export default function Navbar({ className = "" }: NavbarProps) {
 
                 {/* User name */}
                 <div className="hidden sm:block text-left">
-                  <p className="text-sm font-medium text-foreground truncate max-w-32">
+                  <p className="text-xs font-medium text-foreground truncate max-w-28">
                     {user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Usuario"}
                   </p>
                 </div>
 
                 {/* Dropdown arrow */}
                 <svg
-                  className={`w-4 h-4 text-muted-foreground transition-transform duration-300 ${
+                  className={`w-3 h-3 text-muted-foreground transition-transform duration-300 ${
                     showUserMenu ? "rotate-180" : ""
                   }`}
                   fill="none"
@@ -96,7 +96,7 @@ export default function Navbar({ className = "" }: NavbarProps) {
                   <div className="fixed inset-0 z-10" onClick={() => setShowUserMenu(false)} />
 
                   {/* Menu */}
-                  <div className="absolute right-0 mt-3 w-72 bg-card/95 backdrop-blur-xl border border-purple-500/20 rounded-2xl shadow-2xl shadow-purple-500/10 z-20 overflow-hidden">
+                  <div className="absolute right-0 mt-3 w-72 bg-card/98 backdrop-blur-xl border border-purple-500/20 rounded-2xl shadow-2xl shadow-purple-500/10 z-20 overflow-hidden">
                     {/* User info header */}
                     <div className="p-5 bg-gradient-to-br from-purple-600/10 to-blue-600/10 border-b border-purple-500/20">
                       <div className="flex items-center space-x-3">
