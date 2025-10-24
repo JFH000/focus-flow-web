@@ -4,18 +4,19 @@ import { useAuth } from "@/contexts/AuthContext"
 import { useTheme } from "@/contexts/ThemeContext"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 interface NavbarProps {
   className?: string
 }
 
 export default function Navbar({ className = "" }: NavbarProps) {
-  const { user, signOut } = useAuth()
+  const { user, signOut, session } = useAuth()
   const { theme, resolvedTheme, setTheme } = useTheme()
   const router = useRouter()
   const pathname = usePathname()
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [hasCalendarAccess, setHasCalendarAccess] = useState(false)
 
   const handleSignOut = async () => {
     await signOut()
@@ -26,6 +27,15 @@ export default function Navbar({ className = "" }: NavbarProps) {
   const handleThemeChange = (newTheme: "light" | "dark" | "system") => {
     setTheme(newTheme)
   }
+
+  // Check if user has Google Calendar access
+  useEffect(() => {
+    if (session?.provider_token) {
+      setHasCalendarAccess(true)
+    } else {
+      setHasCalendarAccess(false)
+    }
+  }, [session])
 
   return (
     <nav
@@ -126,6 +136,23 @@ export default function Navbar({ className = "" }: NavbarProps) {
                       </div>
                     </div>
 
+                    {/* Google Calendar Status */}
+                    <div className="px-4 py-3 border-b border-purple-500/20">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <div className={`w-2 h-2 rounded-full ${hasCalendarAccess ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                          <span className="text-xs font-medium text-muted-foreground">Google Calendar</span>
+                        </div>
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          hasCalendarAccess 
+                            ? 'bg-green-500/10 text-green-600' 
+                            : 'bg-red-500/10 text-red-600'
+                        }`}>
+                          {hasCalendarAccess ? 'Conectado' : 'No conectado'}
+                        </span>
+                      </div>
+                    </div>
+
                     {/* Navigation links */}
                     <div className="py-2 px-2">
                       <button
@@ -216,6 +243,7 @@ export default function Navbar({ className = "" }: NavbarProps) {
                         <span>Dashboard</span>
                       </button>
                     </div>
+
 
                     {/* Theme selector */}
                     <div className="px-4 py-3 border-t border-purple-500/20">

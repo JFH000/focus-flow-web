@@ -9,6 +9,7 @@ interface AuthContextType {
   session: Session | null
   loading: boolean
   signInWithGoogle: () => Promise<void>
+  connectGoogleCalendar: () => Promise<void>
   signOut: () => Promise<void>
 }
 
@@ -49,8 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-          scopes: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events'
+          redirectTo: `${window.location.origin}/auth/callback`
         }
       })
       if (error) {
@@ -59,6 +59,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error('Error signing in with Google:', error)
+      setLoading(false)
+    }
+  }
+
+  const connectGoogleCalendar = async () => {
+    try {
+      setLoading(true)
+      
+      // First, sign out to clear any existing session
+      await supabase.auth.signOut()
+      
+      // Then sign in with calendar scopes
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          scopes: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events'
+        }
+      })
+      
+      if (error) {
+        console.error('Error connecting Google Calendar:', error)
+        throw error
+      }
+    } catch (error) {
+      console.error('Error connecting Google Calendar:', error)
       setLoading(false)
     }
   }
@@ -82,6 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     session,
     loading,
     signInWithGoogle,
+    connectGoogleCalendar,
     signOut
   }
 
