@@ -755,7 +755,7 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
                 Conecta tu Google Calendar
               </h3>
               <div className="mt-1 text-sm text-blue-700">
-                <p>Para sincronizar tus eventos con Google Calendar, necesitas conectar tu cuenta. Haz clic en el botón "Conectar Google Calendar" en la parte superior.</p>
+                <p>Para sincronizar tus eventos con Google Calendar, necesitas conectar tu cuenta. Haz clic en el botón &quot;Conectar Google Calendar&quot; en la parte superior.</p>
               </div>
             </div>
           </div>

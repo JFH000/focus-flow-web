@@ -12,7 +12,7 @@ interface NavbarProps {
 
 export default function Navbar({ className = "" }: NavbarProps) {
   const { user, signOut, session } = useAuth()
-  const { theme, resolvedTheme, setTheme } = useTheme()
+  const { theme, setTheme } = useTheme()
   const router = useRouter()
   const pathname = usePathname()
   const [showUserMenu, setShowUserMenu] = useState(false)

@@ -111,7 +111,7 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
             if (errorData.error?.details?.[0]?.reason === 'ACCESS_TOKEN_SCOPE_INSUFFICIENT') {
               throw new Error('PERMISSIONS_REQUIRED: Necesitas conectar tu Google Calendar para crear eventos. Haz clic en "Conectar Google Calendar" en la parte superior.')
             }
-          } catch (parseError) {
+          } catch {
             // If we can't parse the error, fall back to generic message
           }
           throw new Error('No tienes permisos para acceder al calendario. Por favor, conecta tu Google Calendar.')
@@ -224,7 +224,7 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
             if (errorData.error?.details?.[0]?.reason === 'ACCESS_TOKEN_SCOPE_INSUFFICIENT') {
               throw new Error('PERMISSIONS_REQUIRED: Necesitas conectar tu Google Calendar para sincronizar eventos. Haz clic en "Conectar Google Calendar" en la parte superior.')
             }
-          } catch (parseError) {
+          } catch {
             // If we can't parse the error, fall back to generic message
           }
           throw new Error('No tienes permisos para acceder al calendario. Por favor, conecta tu Google Calendar.')
