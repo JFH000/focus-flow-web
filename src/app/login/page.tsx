@@ -100,7 +100,7 @@ export default function LoginPage() {
           {/* Logo */}
           <Link href="/" className="mb-12 inline-flex items-center gap-3 group">
             <Image
-              src="/focusflow-logo.png"
+              src="/focusflow-logo-removebg-preview.png"
               alt="FocusFlow Logo"
               width={48}
               height={48}
@@ -145,7 +145,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
           <Link href="/" className="lg:hidden flex items-center justify-center gap-3 mb-8">
-            <Image src="/focusflow-logo.png" alt="FocusFlow Logo" width={40} height={40} className="rounded-lg" />
+            <Image src="/focusflow-logo-removebg-preview.png" alt="FocusFlow Logo" width={40} height={40} className="rounded-lg" />
             <span className="text-2xl font-bold bg-gradient-to-r from-primary via-purple-500 to-primary bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
               FocusFlow
             </span>
