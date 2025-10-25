@@ -6,6 +6,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 
@@ -39,6 +40,7 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
+        <Script src="https://t.contentsquare.net/uxa/01501fecfa08c.js" />
         <meta name="theme-color" content="#ffffff" />
       </head>
       <body
