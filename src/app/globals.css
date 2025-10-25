@@ -2,6 +2,11 @@
 
 @custom-variant dark (&:is(.dark *));
 
+.card{
+  height: fit-content;
+  max-width: 100%;
+}
+
 :root {
   /* Updated color tokens to match design brief with purple, white, and blue palette */
   --background: oklch(1 0 0);
