@@ -819,16 +819,46 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
     <div
       className={`calendar-container ${isDashboard ? "h-full flex flex-col bg-background" : "h-screen flex flex-col bg-background"}`}
     >
-      {/* Mensaje de estado */}
       {(isUpdating || isSyncing || syncMessage) && (
-        <div className="px-4 sm:px-6 py-3 bg-primary/10 text-primary text-sm text-center font-medium border-b border-primary/20">
-          {isUpdating && "🔄 Actualizando desde la base de datos..."}
-          {isSyncing && "🔄 Sincronizando con Google Calendar..."}
-          {syncMessage && `✅ ${syncMessage}`}
+        <div className="fixed bottom-6 right-6 z-50 mb-20 sm:mb-6">
+          <div className="bg-card border border-border rounded-lg shadow-2xl px-4 py-3 min-w-[200px] max-w-[300px] backdrop-blur-sm">
+            <div className="flex items-center gap-3">
+              {(isUpdating || isSyncing) && (
+                <svg
+                  className="w-5 h-5 animate-spin text-primary flex-shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+              )}
+              {syncMessage && !isUpdating && !isSyncing && (
+                <svg
+                  className="w-5 h-5 text-green-500 flex-shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+              <p className="text-sm font-medium text-foreground">
+                {isUpdating && "Actualizando..."}
+                {isSyncing && "Sincronizando..."}
+                {syncMessage && !isUpdating && !isSyncing && syncMessage}
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 sm:px-6 py-2 border-b border-border bg-card sticky top-0 z-40 shadow-sm">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 sm:px-6 py-2 border-b border-border bg-card sticky top-0 z-40 shadow-sm">
         <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
           <div className="flex items-center gap-2">
             <button
@@ -969,24 +999,8 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
         </div>
       </div>
 
-      {/* Status messages */}
-      {(syncMessage || syncError) && (
-        <div
-          className={`px-4 sm:px-6 py-3 text-sm font-medium ${
-            syncMessage
-              ? "bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-400 border-b border-green-200 dark:border-green-800"
-              : syncError
-                ? "bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-400 border-b border-red-200 dark:border-red-800"
-                : "bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400 border-b border-blue-200 dark:border-blue-800"
-          }`}
-        >
-          {syncMessage || syncError}
-        </div>
-      )}
-
-      {/* Info message when no calendar access */}
       {!hasCalendarAccess && (
-        <div className="mx-4 sm:mx-6 my-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+        <div className="mx-4 sm:mx-6 mt-3 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
           <div className="flex items-start gap-3">
             <div className="flex-shrink-0">
               <svg className="h-5 w-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
@@ -1012,7 +1026,7 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
 
       {/* Calendar Grid */}
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-        <div className="grid grid-cols-[60px_repeat(7,minmax(80px,1fr))] sm:grid-cols-[80px_repeat(7,1fr)] border-b border-border bg-card sticky top-[3.5rem] sm:top-[3.5rem] z-30 overflow-x-auto shadow-sm">
+        <div className="grid grid-cols-[60px_repeat(7,minmax(80px,1fr))] sm:grid-cols-[80px_repeat(7,1fr)] border-b border-border bg-card sticky top-[3rem] sm:top-[3rem] z-30 overflow-x-auto shadow-sm">
           <div className="border-r border-border px-2 py-2 text-xs text-muted-foreground font-semibold">Hora</div>
           {Array.from({ length: 7 }, (_, i) => addDays(anchor, i)).map((d) => (
             <div
