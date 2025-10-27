@@ -56,7 +56,7 @@ interface EventDetailsModalProps {
   onClose: () => void
   event: CalendarEvent | null
   onEdit: (event: CalendarEvent) => void
-  onDelete: (eventId: string) => void // Agregando prop para eliminar
+  onDelete: (eventId: string) => void
 }
 
 function EventDetailsModal({ isOpen, onClose, event, onEdit, onDelete }: EventDetailsModalProps) {
@@ -66,19 +66,25 @@ function EventDetailsModal({ isOpen, onClose, event, onEdit, onDelete }: EventDe
   const endDate = new Date(event.end_time)
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="bg-background rounded-lg shadow-xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-card rounded-xl shadow-2xl w-full max-w-lg border border-border"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="p-6">
           {/* Header con color del evento */}
-          <div className="h-2 w-full rounded-t-lg -mx-6 -mt-6 mb-4" style={{ background: getEventColor(event) }} />
+          <div className="h-1.5 w-full rounded-t-xl -mx-6 -mt-6 mb-6" style={{ background: getEventColor(event) }} />
 
-          <h2 className="text-2xl font-bold mb-4 text-foreground">{event.title}</h2>
+          <h2 className="text-2xl font-bold mb-6 text-foreground text-balance">{event.title}</h2>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             {/* Fecha y hora */}
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
               <svg
-                className="w-5 h-5 text-muted-foreground mt-0.5"
+                className="w-5 h-5 text-primary mt-0.5 flex-shrink-0"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -90,11 +96,11 @@ function EventDetailsModal({ isOpen, onClose, event, onEdit, onDelete }: EventDe
                   d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <div>
-                <div className="text-sm font-medium text-foreground">
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold text-foreground">
                   {format(startDate, "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })}
                 </div>
-                <div className="text-sm text-muted-foreground">
+                <div className="text-sm text-muted-foreground mt-1">
                   {event.all_day ? "Todo el día" : `${format(startDate, "HH:mm")} – ${format(endDate, "HH:mm")}`}
                 </div>
               </div>
@@ -102,9 +108,9 @@ function EventDetailsModal({ isOpen, onClose, event, onEdit, onDelete }: EventDe
 
             {/* Ubicación */}
             {event.location && (
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
                 <svg
-                  className="w-5 h-5 text-muted-foreground mt-0.5"
+                  className="w-5 h-5 text-primary mt-0.5 flex-shrink-0"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -122,30 +128,30 @@ function EventDetailsModal({ isOpen, onClose, event, onEdit, onDelete }: EventDe
                     d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                   />
                 </svg>
-                <div className="text-sm text-foreground">{event.location}</div>
+                <div className="text-sm text-foreground flex-1 min-w-0 break-words">{event.location}</div>
               </div>
             )}
 
             {/* Descripción */}
             {event.description && (
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
                 <svg
-                  className="w-5 h-5 text-muted-foreground mt-0.5"
+                  className="w-5 h-5 text-primary mt-0.5 flex-shrink-0"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
                 </svg>
-                <div className="text-sm text-muted-foreground">{event.description}</div>
+                <div className="text-sm text-muted-foreground flex-1 min-w-0 break-words">{event.description}</div>
               </div>
             )}
           </div>
 
-          <div className="flex gap-2 pt-6 mt-6 border-t border-border">
+          <div className="flex flex-col sm:flex-row gap-2 pt-6 mt-6 border-t border-border">
             <button
               onClick={onClose}
-              className="flex-1 px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-md hover:bg-muted transition-colors"
+              className="flex-1 px-4 py-2.5 text-sm font-medium text-foreground bg-muted hover:bg-muted/80 rounded-lg transition-colors"
             >
               Cerrar
             </button>
@@ -156,7 +162,7 @@ function EventDetailsModal({ isOpen, onClose, event, onEdit, onDelete }: EventDe
                   onClose()
                 }
               }}
-              className="px-4 py-2 text-sm font-medium bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
+              className="px-4 py-2.5 text-sm font-medium bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90 transition-colors flex items-center justify-center gap-2"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -173,7 +179,7 @@ function EventDetailsModal({ isOpen, onClose, event, onEdit, onDelete }: EventDe
                 onEdit(event)
                 onClose()
               }}
-              className="flex-1 px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2.5 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -309,71 +315,81 @@ function CreateEventModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-background rounded-lg shadow-xl w-full max-w-md">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div className="bg-card rounded-xl shadow-2xl w-full max-w-lg border border-border my-8">
         <div className="p-6">
-          <h2 className="text-xl font-semibold mb-4">{editingEvent ? "Editar Evento" : "Crear Evento"}</h2>
+          <h2 className="text-2xl font-bold mb-6 text-foreground">{editingEvent ? "Editar Evento" : "Crear Evento"}</h2>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded-md text-sm">{error}</div>
+            <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm flex items-start gap-2">
+              <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span>{error}</span>
+            </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium mb-1">Título *</label>
+              <label className="block text-sm font-semibold mb-2 text-foreground">Título *</label>
               <input
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
-                className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-4 py-2.5 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                 placeholder="Nombre del evento"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Descripción</label>
+              <label className="block text-sm font-semibold mb-2 text-foreground">Descripción</label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
-                className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-4 py-2.5 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-none"
                 rows={3}
                 placeholder="Descripción del evento"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Ubicación</label>
+              <label className="block text-sm font-semibold mb-2 text-foreground">Ubicación</label>
               <input
                 type="text"
                 value={formData.location}
                 onChange={(e) => setFormData((prev) => ({ ...prev, location: e.target.value }))}
-                className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-4 py-2.5 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                 placeholder="Ubicación del evento"
               />
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
               <input
                 type="checkbox"
                 id="allDay"
                 checked={formData.allDay}
                 onChange={(e) => setFormData((prev) => ({ ...prev, allDay: e.target.checked }))}
-                className="rounded"
+                className="w-4 h-4 rounded border-border text-primary focus:ring-2 focus:ring-primary"
               />
-              <label htmlFor="allDay" className="text-sm font-medium">
+              <label htmlFor="allDay" className="text-sm font-medium text-foreground cursor-pointer">
                 Todo el día
               </label>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Fecha</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-semibold mb-2 text-foreground">Fecha</label>
                 <input
                   type="date"
                   value={formData.startDate}
                   onChange={(e) => setFormData((prev) => ({ ...prev, startDate: e.target.value }))}
-                  className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-4 py-2.5 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                   required
                 />
               </div>
@@ -381,39 +397,39 @@ function CreateEventModal({
               {!formData.allDay && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Hora inicio</label>
+                    <label className="block text-sm font-semibold mb-2 text-foreground">Hora inicio</label>
                     <input
                       type="time"
                       value={formData.startTime}
                       onChange={(e) => setFormData((prev) => ({ ...prev, startTime: e.target.value }))}
-                      className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full px-4 py-2.5 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Hora fin</label>
+                    <label className="block text-sm font-semibold mb-2 text-foreground">Hora fin</label>
                     <input
                       type="time"
                       value={formData.endTime}
                       onChange={(e) => setFormData((prev) => ({ ...prev, endTime: e.target.value }))}
-                      className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full px-4 py-2.5 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                     />
                   </div>
                 </>
               )}
             </div>
 
-            <div className="flex gap-2 pt-4">
+            <div className="flex flex-col sm:flex-row gap-3 pt-4">
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-md hover:bg-muted"
+                className="flex-1 px-4 py-2.5 text-sm font-medium text-foreground bg-muted hover:bg-muted/80 rounded-lg transition-colors"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={loading || !formData.title.trim()}
-                className="flex-1 px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:opacity-90 disabled:opacity-50"
+                className="flex-1 px-4 py-2.5 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 {loading
                   ? editingEvent
@@ -805,64 +821,58 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
     >
       {/* Mensaje de estado */}
       {(isUpdating || isSyncing || syncMessage) && (
-        <div className="px-6 py-2 bg-primary/10 text-primary text-sm text-center">
+        <div className="px-4 sm:px-6 py-3 bg-primary/10 text-primary text-sm text-center font-medium border-b border-primary/20">
           {isUpdating && "🔄 Actualizando desde la base de datos..."}
           {isSyncing && "🔄 Sincronizando con Google Calendar..."}
           {syncMessage && `✅ ${syncMessage}`}
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:backdrop-blur sticky top-12 z-40">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 sm:px-6 py-2 border-b border-border bg-card sticky top-0 z-40 shadow-sm">
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
+          <div className="flex items-center gap-2">
+            <button
+              className="p-2 border border-border rounded-lg hover:bg-muted transition-colors active:scale-95"
+              onClick={() => setAnchor(addDays(anchor, -7))}
+              title="Semana anterior"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button
+              className="p-2 border border-border rounded-lg hover:bg-muted transition-colors active:scale-95"
+              onClick={() => setAnchor(addDays(anchor, 7))}
+              title="Semana siguiente"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
           <button
-            className="p-2 border border-border rounded-md hover:bg-muted transition-colors"
-            onClick={() => setAnchor(addDays(anchor, -7))}
-            title="Semana anterior"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <button
-            className="p-2 border border-border rounded-md hover:bg-muted transition-colors"
-            onClick={() => setAnchor(addDays(anchor, 7))}
-            title="Semana siguiente"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-          <button
-            className="p-2 border border-border rounded-md hover:bg-muted transition-colors"
+            className="px-3 py-2 border border-border rounded-lg hover:bg-muted transition-colors text-sm font-medium active:scale-95"
             onClick={() => setAnchor(startOfDay(new Date()))}
             title="Ir a hoy"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
+            Hoy
           </button>
         </div>
 
         <div className="text-center">
-          <h1 className="text-lg font-semibold">
+          <h1 className="text-base sm:text-lg font-bold text-foreground">
             {format(start, "d 'de' MMM", { locale: es })} – {format(end, "d 'de' MMM, yyyy", { locale: es })}
           </h1>
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Google Calendar Connection Button - Only show if no access */}
+        <div className="flex flex-wrap items-center justify-center gap-2 w-full sm:w-auto">
+          {/* Google Calendar Connection Button */}
           {!hasCalendarAccess && (
             <button
               onClick={connectGoogleCalendar}
               disabled={authLoading}
-              className="px-4 py-2 rounded-md bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 disabled:opacity-50 transition-all duration-200 flex items-center gap-2 shadow-lg"
-              title="Conectar con Google Calendar para sincronizar eventos"
+              className="px-3 sm:px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 disabled:opacity-50 transition-all duration-200 flex items-center gap-2 shadow-lg text-sm font-medium active:scale-95"
+              title="Conectar con Google Calendar"
             >
               {authLoading ? (
                 <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -883,25 +893,26 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
                   />
                 </svg>
               )}
-              <span className="text-sm font-medium">{authLoading ? "Conectando..." : "Conectar Google Calendar"}</span>
+              <span className="hidden sm:inline">{authLoading ? "Conectando..." : "Conectar Google"}</span>
+              <span className="sm:hidden">{authLoading ? "..." : "Google"}</span>
             </button>
           )}
 
-          {/* Status indicator - Only show if connected */}
+          {/* Status indicator */}
           {hasCalendarAccess && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-green-100 text-green-800 border border-green-200">
-              <div className="w-2 h-2 rounded-full bg-green-500"></div>
-              <span className="text-sm font-medium">Google Calendar Conectado</span>
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800">
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+              <span className="text-xs sm:text-sm font-medium hidden sm:inline">Conectado</span>
             </div>
           )}
 
-          {/* Botones de actualización - Only show if connected */}
+          {/* Botones de actualización */}
           {hasCalendarAccess && (
             <>
               <button
                 onClick={handleUpdateFromDB}
                 disabled={isUpdating}
-                className="p-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 transition-colors flex items-center gap-2"
+                className="p-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 transition-colors flex items-center gap-1.5 active:scale-95"
                 title="Actualizar desde base de datos"
               >
                 {isUpdating ? (
@@ -923,13 +934,13 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
                     />
                   </svg>
                 )}
-                <span className="text-xs">BD</span>
+                <span className="text-xs font-medium">BD</span>
               </button>
 
               <button
                 onClick={handleSyncWithGoogle}
                 disabled={isSyncing}
-                className="p-2 rounded-md bg-green-500 text-white hover:bg-green-600 disabled:opacity-50 transition-colors flex items-center gap-2"
+                className="p-2 rounded-lg bg-green-500 text-white hover:bg-green-600 disabled:opacity-50 transition-colors flex items-center gap-1.5 active:scale-95"
                 title="Sincronizar con Google Calendar"
               >
                 {isSyncing ? (
@@ -951,7 +962,7 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
                     />
                   </svg>
                 )}
-                <span className="text-xs">Google</span>
+                <span className="text-xs font-medium hidden sm:inline">Sync</span>
               </button>
             </>
           )}
@@ -961,12 +972,12 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
       {/* Status messages */}
       {(syncMessage || syncError) && (
         <div
-          className={`px-6 py-3 text-sm ${
+          className={`px-4 sm:px-6 py-3 text-sm font-medium ${
             syncMessage
-              ? "bg-green-100 text-green-800"
+              ? "bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-400 border-b border-green-200 dark:border-green-800"
               : syncError
-                ? "bg-red-100 text-red-800"
-                : "bg-blue-100 text-blue-800"
+                ? "bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-400 border-b border-red-200 dark:border-red-800"
+                : "bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400 border-b border-blue-200 dark:border-blue-800"
           }`}
         >
           {syncMessage || syncError}
@@ -975,10 +986,10 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
 
       {/* Info message when no calendar access */}
       {!hasCalendarAccess && (
-        <div className="px-6 py-4 bg-blue-50 border-l-4 border-blue-400 text-blue-800">
-          <div className="flex items-start">
+        <div className="mx-4 sm:mx-6 my-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+          <div className="flex items-start gap-3">
             <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="h-5 w-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
                 <path
                   fillRule="evenodd"
                   d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
@@ -986,9 +997,9 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
                 />
               </svg>
             </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-blue-800">Conecta tu Google Calendar</h3>
-              <div className="mt-1 text-sm text-blue-700">
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-semibold text-blue-800 dark:text-blue-400">Conecta tu Google Calendar</h3>
+              <div className="mt-1 text-sm text-blue-700 dark:text-blue-300">
                 <p>
                   Para sincronizar tus eventos con Google Calendar, necesitas conectar tu cuenta. Haz clic en el botón
                   &quot;Conectar Google Calendar&quot; en la parte superior.
@@ -1000,30 +1011,33 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
       )}
 
       {/* Calendar Grid */}
-      <div className="flex-1 flex flex-col min-h-0">
-        {/* Day headers */}
-        <div className="grid grid-cols-8 border-b border-border bg-background sticky top-[calc(3rem+4.5rem)] z-30">
-          <div className="border-r border-border px-2 py-2 text-xs text-muted-foreground font-medium">Hora</div>
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <div className="grid grid-cols-[60px_repeat(7,minmax(80px,1fr))] sm:grid-cols-[80px_repeat(7,1fr)] border-b border-border bg-card sticky top-[3.5rem] sm:top-[3.5rem] z-30 overflow-x-auto shadow-sm">
+          <div className="border-r border-border px-2 py-2 text-xs text-muted-foreground font-semibold">Hora</div>
           {Array.from({ length: 7 }, (_, i) => addDays(anchor, i)).map((d) => (
             <div
               key={format(d, "yyyy-MM-dd")}
-              className={`px-2 py-2 border-r border-border text-center ${isToday(d) ? "bg-primary/5" : ""}`}
+              className={`px-2 py-2 border-r border-border text-center min-w-[80px] ${isToday(d) ? "bg-primary/10" : ""}`}
             >
-              <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+              <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">
                 {format(d, "EEE", { locale: es })}
               </div>
-              <div className={`text-xs font-semibold ${isToday(d) ? "text-primary" : ""}`}>{format(d, "d")}</div>
+              <div className={`text-sm font-bold mt-1 ${isToday(d) ? "text-primary" : "text-foreground"}`}>
+                {format(d, "d")}
+              </div>
             </div>
           ))}
         </div>
 
         {/* Main calendar grid */}
-        <div className="flex-1 grid grid-cols-8 min-h-0">
+        <div className="flex-1 grid grid-cols-[60px_repeat(7,minmax(80px,1fr))] sm:grid-cols-[80px_repeat(7,1fr)] min-h-0 overflow-auto">
           {/* Hours gutter */}
-          <div className="border-r border-border text-xs text-muted-foreground bg-muted/30">
+          <div className="border-r border-border text-xs text-muted-foreground bg-muted/20 sticky left-0 z-20">
             {Array.from({ length: 24 }, (_, h) => (
-              <div key={h} className="h-16 border-b border-border/60 px-2 relative flex items-start">
-                <span className="text-[9px] font-medium -translate-y-1">{h.toString().padStart(2, "0")}:00</span>
+              <div key={h} className="h-16 border-b border-border/60 px-1 sm:px-2 relative flex items-start">
+                <span className="text-[9px] sm:text-[10px] font-semibold -translate-y-1">
+                  {h.toString().padStart(2, "0")}:00
+                </span>
                 <div className="absolute left-0 right-0 top-1/2 border-t border-border/50" />
               </div>
             ))}
@@ -1040,7 +1054,7 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
             return (
               <div
                 key={key}
-                className={`relative border-r border-border ${isToday(day) ? "bg-primary/10" : "bg-muted/20"}`}
+                className={`relative border-r border-border min-w-[80px] ${isToday(day) ? "bg-primary/5" : "bg-background"}`}
               >
                 {/* Hour slots background */}
                 {Array.from({ length: 24 }, (_, h) => (
@@ -1056,16 +1070,16 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
 
                 {/* Current time indicator */}
                 {showNow && (
-                  <div className="absolute left-0 right-0 z-10" style={{ top: `${nowTop}%` }}>
+                  <div className="absolute left-0 right-0 z-10 pointer-events-none" style={{ top: `${nowTop}%` }}>
                     <div className="flex items-center">
-                      <span className="w-3 h-3 rounded-full bg-red-500 shadow-lg border-2 border-background" />
+                      <span className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-red-500 shadow-lg border-2 border-background" />
                       <div className="flex-1 border-t-2 border-red-500 shadow-sm" />
                     </div>
                   </div>
                 )}
 
                 {/* Events */}
-                <div className="absolute inset-0 p-1">
+                <div className="absolute inset-0 p-0.5 sm:p-1">
                   {dayEvents.map((ev) => {
                     const startDate = new Date(ev.start_time)
                     const endDate = new Date(ev.end_time)
@@ -1081,26 +1095,27 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
                     return (
                       <div
                         key={ev.id}
-                        className="absolute rounded-md text-xs shadow-lg border-2 hover:shadow-xl transition-all duration-200 bg-card/95 backdrop-blur-sm hover:bg-card cursor-pointer overflow-hidden hover:scale-105"
+                        className="absolute rounded-md text-xs shadow-md hover:shadow-xl transition-all duration-200 bg-card/95 backdrop-blur-sm hover:bg-card cursor-pointer overflow-hidden hover:scale-105 hover:z-10"
                         style={{
                           top: `${top}%`,
                           height: `${height}%`,
                           left: `${left}%`,
                           width: `${width}%`,
-                          borderColor: getEventColor(ev),
-                          backgroundColor: `${getEventColor(ev)}20`,
+                          borderLeft: `3px solid ${getEventColor(ev)}`,
+                          backgroundColor: `${getEventColor(ev)}15`,
                         }}
                         onClick={() => setSelectedEvent(ev)}
                         title={`${ev.title}\n${format(startDate, "PPp", { locale: es })} – ${format(endDate, "PPp", { locale: es })}`}
                       >
-                        <div className="h-2 w-full" style={{ background: getEventColor(ev) }} />
-                        <div className="p-2">
-                          <div className="font-semibold text-foreground text-[11px] truncate pr-6">{ev.title}</div>
-                          <div className="opacity-80 text-muted-foreground text-[10px] truncate">
-                            {format(startDate, "HH:mm")}–{format(endDate, "HH:mm")}
+                        <div className="p-1 sm:p-2 h-full flex flex-col">
+                          <div className="font-semibold text-foreground text-[10px] sm:text-[11px] truncate leading-tight">
+                            {ev.title}
                           </div>
-                          {ev.location && (
-                            <div className="opacity-80 text-muted-foreground text-[10px] truncate">
+                          <div className="text-muted-foreground text-[9px] sm:text-[10px] truncate mt-0.5">
+                            {format(startDate, "HH:mm")}
+                          </div>
+                          {ev.location && height > 15 && (
+                            <div className="text-muted-foreground text-[9px] truncate mt-0.5 hidden sm:block">
                               📍 {ev.location}
                             </div>
                           )}
@@ -1123,7 +1138,7 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
           setEditingEvent(event)
           setShowCreateModal(true)
         }}
-        onDelete={handleDeleteEvent} // Pasando la función de eliminar
+        onDelete={handleDeleteEvent}
       />
 
       {/* Create/Edit Event Modal */}
@@ -1145,16 +1160,16 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
           setSelectedTime(format(new Date(), "HH:mm"))
           setShowCreateModal(true)
         }}
-        className="fixed bottom-8 right-8 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-2xl hover:shadow-3xl hover:scale-110 transition-all duration-300 flex items-center justify-center z-50 group"
+        className="fixed bottom-6 right-6 w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-primary to-primary/80 text-primary-foreground rounded-full shadow-2xl hover:shadow-3xl hover:scale-110 active:scale-95 transition-all duration-300 flex items-center justify-center z-50 group"
         title="Crear nuevo evento"
       >
         <svg
-          className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300"
+          className="w-6 h-6 sm:w-7 sm:h-7 group-hover:rotate-90 transition-transform duration-300"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
         </svg>
       </button>
     </div>
