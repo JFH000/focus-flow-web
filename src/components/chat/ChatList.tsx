@@ -1,7 +1,7 @@
 'use client'
 
 import { useChat } from '@/contexts/ChatContext'
-import { format } from 'date-fns'
+import { format, subDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
@@ -21,6 +21,12 @@ interface Chat {
 
 interface ChatListItemProps {
   chat: Chat
+}
+
+interface ChatGroup {
+  title: string
+  chats: Chat[]
+  type: 'recent' | 'month'
 }
 
 function ChatListItem({ chat }: ChatListItemProps) {
@@ -207,10 +213,126 @@ function ChatListItem({ chat }: ChatListItemProps) {
   )
 }
 
-export default function ChatList({ className = '' }: ChatListProps) {
-  const { chats, loading } = useChat()
+// Función para agrupar chats por períodos de tiempo
+function groupChatsByDate(chats: Chat[]): ChatGroup[] {
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const yesterday = new Date(today)
+  yesterday.setDate(yesterday.getDate() - 1)
+  
+  const groups: ChatGroup[] = []
+  
+  // Chats de hoy
+  const todayChats = chats.filter(chat => {
+    const chatDate = new Date(chat.updated_at)
+    const chatDay = new Date(chatDate.getFullYear(), chatDate.getMonth(), chatDate.getDate())
+    return chatDay.getTime() === today.getTime()
+  })
+  
+  if (todayChats.length > 0) {
+    groups.push({
+      title: 'Today',
+      chats: todayChats,
+      type: 'recent'
+    })
+  }
+  
+  // Chats de ayer
+  const yesterdayChats = chats.filter(chat => {
+    const chatDate = new Date(chat.updated_at)
+    const chatDay = new Date(chatDate.getFullYear(), chatDate.getMonth(), chatDate.getDate())
+    return chatDay.getTime() === yesterday.getTime()
+  })
+  
+  if (yesterdayChats.length > 0) {
+    groups.push({
+      title: 'Yesterday',
+      chats: yesterdayChats,
+      type: 'recent'
+    })
+  }
+  
+  // Chats de los últimos 7 días (excluyendo hoy y ayer)
+  const last7Days = chats.filter(chat => {
+    const chatDate = new Date(chat.updated_at)
+    const chatDay = new Date(chatDate.getFullYear(), chatDate.getMonth(), chatDate.getDate())
+    return chatDay.getTime() < yesterday.getTime() && 
+           chatDay.getTime() >= subDays(today, 7).getTime()
+  })
+  
+  if (last7Days.length > 0) {
+    groups.push({
+      title: '7 Days',
+      chats: last7Days,
+      type: 'recent'
+    })
+  }
+  
+  // Chats de los últimos 30 días (excluyendo los anteriores)
+  const last30Days = chats.filter(chat => {
+    const chatDate = new Date(chat.updated_at)
+    const chatDay = new Date(chatDate.getFullYear(), chatDate.getMonth(), chatDate.getDate())
+    return chatDay.getTime() < subDays(today, 7).getTime() && 
+           chatDay.getTime() >= subDays(today, 30).getTime()
+  })
+  
+  if (last30Days.length > 0) {
+    groups.push({
+      title: '30 Days',
+      chats: last30Days,
+      type: 'recent'
+    })
+  }
+  
+  // Agrupar por mes los chats más antiguos
+  const olderChats = chats.filter(chat => {
+    const chatDate = new Date(chat.updated_at)
+    const chatDay = new Date(chatDate.getFullYear(), chatDate.getMonth(), chatDate.getDate())
+    return chatDay.getTime() < subDays(today, 30).getTime()
+  })
+  
+  // Agrupar por mes
+  const monthlyGroups = new Map<string, Chat[]>()
+  
+  olderChats.forEach(chat => {
+    const chatDate = new Date(chat.updated_at)
+    const monthKey = format(chatDate, 'yyyy-MM', { locale: es })
+    
+    if (!monthlyGroups.has(monthKey)) {
+      monthlyGroups.set(monthKey, [])
+    }
+    monthlyGroups.get(monthKey)!.push(chat)
+  })
+  
+  // Convertir a array y ordenar por fecha (más reciente primero)
+  const sortedMonthlyGroups = Array.from(monthlyGroups.entries())
+    .sort(([a], [b]) => b.localeCompare(a))
+    .map(([monthKey, chats]) => ({
+      title: format(new Date(monthKey + '-01'), 'yyyy-MM', { locale: es }),
+      chats: chats.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
+      type: 'month' as const
+    }))
+  
+  groups.push(...sortedMonthlyGroups)
+  
+  return groups
+}
 
-  if (loading) {
+// Componente para el header de grupo
+function GroupHeader({ title, type }: { title: string; type: 'recent' | 'month' }) {
+  return (
+    <div className="px-3 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider border-b border-border/50">
+      {title}
+    </div>
+  )
+}
+
+export default function ChatList({ className = '' }: ChatListProps) {
+  const { chats, loading, loadingMessages } = useChat()
+
+  // Solo mostrar loading si estamos cargando la lista de chats inicialmente
+  // No mostrar loading durante el envío de mensajes (loadingMessages)
+  if (loading && chats.length === 0) {
     return (
       <div className={`space-y-2 ${className}`}>
         {Array.from({ length: 5 }).map((_, i) => (
@@ -220,9 +342,9 @@ export default function ChatList({ className = '' }: ChatListProps) {
     )
   }
 
-  return (
-    <div className={`space-y-2 ${className}`}>
-      {chats.length === 0 ? (
+  if (chats.length === 0) {
+    return (
+      <div className={`space-y-2 ${className}`}>
         <div className="text-center py-8 text-muted-foreground">
           <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
             <svg
@@ -242,11 +364,25 @@ export default function ChatList({ className = '' }: ChatListProps) {
           <p className="text-sm">No tienes chats aún</p>
           <p className="text-xs">Crea tu primer chat escribiendo un mensaje</p>
         </div>
-      ) : (
-        chats.map((chat) => (
-          <ChatListItem key={chat.id} chat={chat} />
-        ))
-      )}
+      </div>
+    )
+  }
+
+  // Agrupar chats por fecha
+  const groupedChats = groupChatsByDate(chats)
+
+  return (
+    <div className={`${className}`}>
+      {groupedChats.map((group, groupIndex) => (
+        <div key={group.title} className={groupIndex > 0 ? 'mt-4' : ''}>
+          <GroupHeader title={group.title} type={group.type} />
+          <div className="space-y-2 mt-2">
+            {group.chats.map((chat) => (
+              <ChatListItem key={chat.id} chat={chat} />
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
