@@ -17,6 +17,7 @@ interface ChatContextType {
   loadChat: (chatId: string) => Promise<void>
   sendMessage: (content: string, chatId?: string) => Promise<Message | null>
   clearCurrentChat: () => void
+  updateChatTitle: (chatId: string, newTitle: string) => Promise<boolean>
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
@@ -35,7 +36,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     if (!user) return
 
     try {
-      // Don't set loadingMessages for loading chats list
       const { data, error } = await supabase
         .from('chats')
         .select('*')
@@ -53,7 +53,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user, supabase])
 
-  // Load user's chats when user changes
   useEffect(() => {
     if (user) {
       loadChats()
@@ -111,7 +110,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
       setChats(prev => prev.filter(chat => chat.id !== chatId))
       
-      // Clear current chat if it was deleted
       if (currentChat?.id === chatId) {
         setCurrentChat(null)
         setMessages([])
@@ -126,10 +124,44 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user, supabase, currentChat])
 
+  const updateChatTitle = useCallback(async (chatId: string, newTitle: string): Promise<boolean> => {
+    if (!user) return false
+
+    try {
+      const { data, error } = await supabase
+        .from('chats')
+        .update({ 
+          title: newTitle,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', chatId)
+        .eq('user_id', user.id)
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Error updating chat title:', error)
+        return false
+      }
+
+      setChats(prev => prev.map(chat => 
+        chat.id === chatId ? { ...chat, title: newTitle, updated_at: data.updated_at } : chat
+      ))
+
+      if (currentChat?.id === chatId) {
+        setCurrentChat(prev => prev ? { ...prev, title: newTitle, updated_at: data.updated_at } : null)
+      }
+
+      return true
+    } catch (error) {
+      console.error('Error updating chat title:', error)
+      return false
+    }
+  }, [user, supabase, currentChat])
+
   const loadChat = useCallback(async (chatId: string) => {
     if (!user) return
 
-    // If we already have this chat loaded, don't reload
     if (currentChat?.id === chatId && messages.length > 0) {
       return
     }
@@ -137,7 +169,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoadingMessages(true)
       
-      // Load chat with messages
       const { data: chatData, error: chatError } = await supabase
         .from('chats')
         .select(`
@@ -170,21 +201,17 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     try {
       let targetChatId = chatId
 
-      // If no chatId provided, create a new chat
       if (!targetChatId) {
         const newChat = await createChat(content.slice(0, 50) + (content.length > 50 ? '...' : ''))
         if (!newChat) return null
         targetChatId = newChat.id
         setCurrentChat({ ...newChat, messages: [] })
         
-        // Redirect to the new chat URL
         router.push(`/foco/${targetChatId}`)
       }
 
-      // Now start loading for message sending
       setLoading(true)
 
-      // Create user message
       const userMessage: MessageInsert = {
         chat_id: targetChatId,
         user_id: user.id,
@@ -203,10 +230,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         return null
       }
 
-      // Add user message to current messages
       setMessages(prev => [...prev, userMessageData])
 
-      // Send to n8n webhook and get streaming response
       const webhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_CHAT_HOST
       let aiContent = ''
 
@@ -252,9 +277,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
               const chunk = decoder.decode(value, { stream: true })
               buffer += chunk
 
-              // Process complete NDJSON lines
               const lines = buffer.split('\n')
-              // Keep last partial line in buffer
               buffer = lines.pop() || ''
 
               for (const line of lines) {
@@ -265,13 +288,11 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
                   if (eventObj.type === 'item' && typeof eventObj.content === 'string') {
                     aiContent += eventObj.content
 
-                    // Update messages with streaming content
                     setMessages(prev => {
                       const lastMessage = prev[prev.length - 1]
                       if (lastMessage && lastMessage.role === 'assistant' && lastMessage.id === 'streaming') {
                         return [...prev.slice(0, -1), { ...lastMessage, content: aiContent }]
                       } else {
-                        // Create streaming message
                         const streamingMessage: Message = {
                           id: 'streaming',
                           chat_id: targetChatId,
@@ -287,9 +308,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
                       }
                     })
                   }
-                  // Ignore 'begin' and 'end' here; stream completion is driven by network EOF
                 } catch {
-                  // If a line isn't valid JSON, skip it silently
+                  // Skip invalid JSON lines
                 }
               }
             }
@@ -301,11 +321,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           aiContent = `Error al procesar tu mensaje: ${error instanceof Error ? error.message : 'Error desconocido'}`
         }
       } else {
-        // Fallback to simulated response if no webhook URL
         aiContent = `Gracias por tu mensaje: "${content}". Esta es una respuesta simulada de la IA.`
       }
 
-      // Create final AI message
       const aiResponse: MessageInsert = {
         chat_id: targetChatId,
         user_id: user.id,
@@ -325,24 +343,20 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         return userMessageData
       }
 
-      // Replace streaming message with final message
       setMessages(prev => {
         const filteredMessages = prev.filter(msg => msg.id !== 'streaming')
         return [...filteredMessages, aiMessageData]
       })
 
-      // Update current chat with new messages
       if (currentChat) {
         setCurrentChat(prev => prev ? {
           ...prev,
           messages: [...prev.messages, userMessageData, aiMessageData]
         } : null)
       } else if (targetChatId) {
-        // If we don't have currentChat but have a targetChatId, load the chat
         await loadChat(targetChatId)
       }
 
-      // Update chats list with updated timestamp (without reloading)
       setChats(prev => prev.map(chat => 
         chat.id === targetChatId 
           ? { ...chat, updated_at: new Date().toISOString() }
@@ -373,7 +387,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     deleteChat,
     loadChat,
     sendMessage,
-    clearCurrentChat
+    clearCurrentChat,
+    updateChatTitle
   }
 
   return (

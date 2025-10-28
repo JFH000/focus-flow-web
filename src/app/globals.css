@@ -884,3 +884,7 @@ button:disabled,
 .dark .prose th {
   background: hsl(var(--muted) / 0.3);
 }
+
+html, body {
+  overflow: hidden;
+}
