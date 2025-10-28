@@ -884,3 +884,5 @@ button:disabled,
 .dark .prose th {
   background: hsl(var(--muted) / 0.3);
 }
+
+/* Removed problematic overflow: hidden that was causing double scroll issues */
