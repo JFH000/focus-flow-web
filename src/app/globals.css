@@ -885,6 +885,4 @@ button:disabled,
   background: hsl(var(--muted) / 0.3);
 }
 
-html, body {
-  overflow: hidden;
-}
+/* Removed problematic overflow: hidden that was causing double scroll issues */

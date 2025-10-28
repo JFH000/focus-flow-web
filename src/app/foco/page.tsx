@@ -14,7 +14,7 @@ export default function FocoPage() {
   }, [clearCurrentChat])
 
   return (
-    <div className="h-full flex flex-col" style={{ height: 'calc(100vh - 3rem)', overflow: 'hidden' }}>
+    <div className="h-full flex flex-col overflow-hidden">
       <div className="flex-1 overflow-hidden relative">
         <div className="h-full">
           <MessageList />

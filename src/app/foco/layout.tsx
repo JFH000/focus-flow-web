@@ -1,14 +1,14 @@
 // app/foco/layout.tsx
 'use client'
 
-import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
-import ChatList from '@/components/chat/ChatList'
 import AppLayout from '@/components/AppLayout'
+import ChatList from '@/components/chat/ChatList'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { useChat } from '@/contexts/ChatContext'
-import { useRouter, usePathname } from 'next/navigation'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { usePathname, useRouter } from 'next/navigation'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 interface Chat {
   id: string
@@ -347,7 +347,7 @@ export default function FocoLayout({
   return (
     <ProtectedRoute>
       <AppLayout>
-        <div className="flex h-screen bg-background">
+        <div className="flex h-full bg-background overflow-hidden">
           {/* Sidebar */}
           <aside 
             className={`flex flex-col border-r bg-card transition-all duration-300 ${
@@ -495,7 +495,7 @@ export default function FocoLayout({
           </aside>
 
           {/* Área principal del chat */}
-          <main className="flex-1 flex flex-col min-h-0">
+          <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
             {children}
           </main>
 
