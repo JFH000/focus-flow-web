@@ -130,7 +130,7 @@ export default function MessageList({ className = '' }: MessageListProps) {
 
   return (
     <div className={`h-full overflow-y-auto message-list ${className}`}>
-      <div className="p-4 pb-20 space-y-6 max-w-4xl mx-auto">
+      <div className="p-4 pb-32 space-y-6 max-w-4xl mx-auto">
         {messages.map((message) => (
           <MessageItem key={message.id} message={message} />
         ))}
