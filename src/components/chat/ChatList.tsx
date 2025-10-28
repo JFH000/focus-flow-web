@@ -4,7 +4,7 @@ import { useChat } from '@/contexts/ChatContext'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { usePathname, useRouter } from 'next/navigation'
-import { useState, useRef, useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 interface ChatListProps {
   className?: string
@@ -144,7 +144,7 @@ function ChatListItem({ chat }: ChatListItemProps) {
                 {chat.title}
               </h3>
               <p className="text-xs text-muted-foreground mt-1 ml-2">
-                {format(new Date(chat.updated_at), 'd MMM. HHmm', { locale: es })}
+                {format(new Date(chat.updated_at), 'd MMM. HH:mm', { locale: es })}
               </p>
             </>
           )}
