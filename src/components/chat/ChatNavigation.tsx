@@ -14,9 +14,12 @@ export default function ChatNavigation({ className = '' }: ChatNavigationProps) 
   const [showHistory, setShowHistory] = useState(false)
 
   const handleNewChat = () => {
-    // Si estamos en dashboard, limpiar el chat actual
+    // Limpiar el chat actual primero
+    clearCurrentChat()
+    
+    // Si estamos en dashboard, ir a dashboard sin chat
     if (window.location.pathname.startsWith('/dashboard')) {
-      clearCurrentChat()
+      router.push('/dashboard')
     } else {
       router.push('/foco')
     }

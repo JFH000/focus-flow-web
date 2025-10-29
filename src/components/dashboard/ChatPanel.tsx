@@ -10,13 +10,16 @@ interface ChatPanelProps {
 }
 
 export default function ChatPanel({ chatId }: ChatPanelProps) {
-  const { loadChat } = useChat()
+  const { loadChat, clearCurrentChat } = useChat()
 
   useEffect(() => {
     if (chatId) {
       loadChat(chatId).catch(console.error)
+    } else {
+      // Limpiar el chat cuando chatId es null
+      clearCurrentChat()
     }
-  }, [chatId, loadChat])
+  }, [chatId, loadChat, clearCurrentChat])
 
   return (
     <div className="h-full flex flex-col bg-background">
