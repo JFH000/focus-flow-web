@@ -53,6 +53,66 @@ export default function Navbar({ className = "" }: NavbarProps) {
             </button>
           </div>
 
+          {/* Center - Navigation buttons */}
+          <div className="hidden md:flex items-center gap-1">
+            <button
+              onClick={() => router.push("/foco")}
+              className={`px-4 py-2 text-sm rounded-lg transition-all duration-200 flex items-center space-x-2 ${
+                pathname.startsWith("/foco")
+                  ? "bg-gradient-to-r from-purple-600/20 to-blue-600/20 text-purple-600 font-medium"
+                  : "text-foreground hover:bg-muted/50"
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                />
+              </svg>
+              <span>Foco</span>
+            </button>
+
+            <button
+              onClick={() => router.push("/calendar")}
+              className={`px-4 py-2 text-sm rounded-lg transition-all duration-200 flex items-center space-x-2 ${
+                pathname.startsWith("/calendar")
+                  ? "bg-gradient-to-r from-purple-600/20 to-blue-600/20 text-purple-600 font-medium"
+                  : "text-foreground hover:bg-muted/50"
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              <span>Calendar</span>
+            </button>
+
+            <button
+              onClick={() => router.push("/dashboard")}
+              className={`px-4 py-2 text-sm rounded-lg transition-all duration-200 flex items-center space-x-2 ${
+                pathname.startsWith("/dashboard")
+                  ? "bg-gradient-to-r from-purple-600/20 to-blue-600/20 text-purple-600 font-medium"
+                  : "text-foreground hover:bg-muted/50"
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                />
+              </svg>
+              <span>Dashboard</span>
+            </button>
+          </div>
+
           {/* Right side - User menu */}
           <div className="flex items-center">
             <div className="relative">
@@ -136,113 +196,9 @@ export default function Navbar({ className = "" }: NavbarProps) {
                       </div>
                     </div>
 
-                    {/* Google Calendar Status */}
-                    <div className="px-4 py-3 border-b border-purple-500/20">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <div className={`w-2 h-2 rounded-full ${hasCalendarAccess ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                          <span className="text-xs font-medium text-muted-foreground">Google Calendar</span>
-                        </div>
-                        <span className={`text-xs px-2 py-1 rounded-full ${
-                          hasCalendarAccess 
-                            ? 'bg-green-500/10 text-green-600' 
-                            : 'bg-red-500/10 text-red-600'
-                        }`}>
-                          {hasCalendarAccess ? 'Conectado' : 'No conectado'}
-                        </span>
-                      </div>
-                    </div>
+                    
 
-                    {/* Navigation links */}
-                    <div className="py-2 px-2">
-                      <button
-                        onClick={() => {
-                          setShowUserMenu(false)
-                          router.push("/foco")
-                        }}
-                        className={`w-full px-4 py-3 text-left text-sm rounded-xl transition-all duration-200 flex items-center space-x-3 group ${
-                          pathname.startsWith("/foco")
-                            ? "bg-gradient-to-r from-purple-600/20 to-blue-600/20 text-purple-600 font-medium"
-                            : "text-foreground hover:bg-muted"
-                        }`}
-                      >
-                        <div
-                          className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                            pathname.startsWith("/foco") ? "bg-purple-600/20" : "bg-muted group-hover:bg-purple-600/10"
-                          }`}
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                            />
-                          </svg>
-                        </div>
-                        <span>Foco</span>
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setShowUserMenu(false)
-                          router.push("/calendar")
-                        }}
-                        className={`w-full px-4 py-3 text-left text-sm rounded-xl transition-all duration-200 flex items-center space-x-3 group ${
-                          pathname.startsWith("/calendar")
-                            ? "bg-gradient-to-r from-purple-600/20 to-blue-600/20 text-purple-600 font-medium"
-                            : "text-foreground hover:bg-muted"
-                        }`}
-                      >
-                        <div
-                          className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                            pathname.startsWith("/calendar")
-                              ? "bg-purple-600/20"
-                              : "bg-muted group-hover:bg-purple-600/10"
-                          }`}
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                            />
-                          </svg>
-                        </div>
-                        <span>Calendar</span>
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setShowUserMenu(false)
-                          router.push("/dashboard")
-                        }}
-                        className={`w-full px-4 py-3 text-left text-sm rounded-xl transition-all duration-200 flex items-center space-x-3 group ${
-                          pathname.startsWith("/dashboard")
-                            ? "bg-gradient-to-r from-purple-600/20 to-blue-600/20 text-purple-600 font-medium"
-                            : "text-foreground hover:bg-muted"
-                        }`}
-                      >
-                        <div
-                          className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                            pathname.startsWith("/dashboard")
-                              ? "bg-purple-600/20"
-                              : "bg-muted group-hover:bg-purple-600/10"
-                          }`}
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
-                            />
-                          </svg>
-                        </div>
-                        <span>Dashboard</span>
-                      </button>
-                    </div>
+                    
 
 
                     {/* Theme selector */}

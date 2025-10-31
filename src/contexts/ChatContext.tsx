@@ -3,7 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 import { Chat, ChatInsert, ChatWithMessages, Message, MessageInsert } from '@/types/database'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 
 interface ChatContextType {
@@ -31,6 +31,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth()
   const supabase = createClient()
   const router = useRouter()
+  const pathname = usePathname()
 
   const loadChats = useCallback(async () => {
     if (!user) return
@@ -207,7 +208,12 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         targetChatId = newChat.id
         setCurrentChat({ ...newChat, messages: [] })
         
-        router.push(`/foco/${targetChatId}`)
+        // Redirigir según la ruta actual
+        if (pathname?.startsWith('/dashboard')) {
+          router.push(`/dashboard?chat=${targetChatId}`)
+        } else {
+          router.push(`/foco/${targetChatId}`)
+        }
       }
 
       setLoading(true)
@@ -370,7 +376,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false)
     }
-  }, [user, supabase, currentChat, createChat, loadChat, router])
+  }, [user, supabase, currentChat, createChat, loadChat, router, pathname])
 
   const clearCurrentChat = useCallback(() => {
     setCurrentChat(null)

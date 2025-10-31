@@ -29,7 +29,7 @@ export default function ChatInput({
   }>>([])
   const [showHistory, setShowHistory] = useState(false)
   const [showButtons, setShowButtons] = useState(true)
-  const { sendMessage, loading, currentChat, chats, loading: loadingChats } = useChat()
+  const { sendMessage, loading, currentChat, chats, loading: loadingChats, clearCurrentChat } = useChat()
   const router = useRouter()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -199,6 +199,9 @@ export default function ChatInput({
   }
 
   const handleNewChat = () => {
+    // Limpiar el chat actual primero
+    clearCurrentChat()
+    
     // Si estamos en dashboard, ir a dashboard sin chat
     if (window.location.pathname.startsWith('/dashboard')) {
       router.push('/dashboard')
