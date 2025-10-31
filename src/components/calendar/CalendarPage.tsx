@@ -445,44 +445,81 @@ function useUserEvents(weekAnchor: Date) {
   const [events, setEvents] = useState<CalendarEvent[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [lastFetchedWeek, setLastFetchedWeek] = useState<Date | null>(null)
 
   const fetchEvents = useCallback(async () => {
+    // Evitar recargas innecesarias si ya estamos cargando o si la semana no ha cambiado
+    const weekKey = weekAnchor.toDateString()
+    const lastFetchedKey = lastFetchedWeek?.toDateString()
+    
+    if (loading || (lastFetchedKey === weekKey)) {
+      return
+    }
+
     setLoading(true)
     setError(null)
+    
     try {
       const supabase = createClient()
       const { start, end } = getWeekRange(weekAnchor)
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+      
+      const { data: { user } } = await supabase.auth.getUser()
+      
       if (!user) {
         setEvents([])
         setLoading(false)
         return
       }
 
-      // Fetch events that intersect the week range
-      const { data, error } = await supabase
-        .from("calendar_events")
-        .select("*")
-        .eq("user_id", user.id)
-        .or(`and(start_time.lte.${end.toISOString()},end_time.gte.${start.toISOString()})`)
-        .order("start_time", { ascending: true })
+      console.log('Fetching events for week:', {
+        start: start.toISOString(),
+        end: end.toISOString(),
+        weekAnchor: weekAnchor.toISOString()
+      })
 
-      if (error) throw error
-      setEvents((data || []) as CalendarEvent[])
+      // Consulta más amplia para asegurar que obtenemos todos los eventos necesarios
+      const { data, error } = await supabase
+        .from('calendar_events')
+        .select('*')
+        .eq('user_id', user.id)
+        .or(
+          `and(start_time.lte.${end.toISOString()},end_time.gte.${start.toISOString()}),` +
+          `start_time.gte.${start.toISOString()},start_time.lte.${end.toISOString()},` +
+          `end_time.gte.${start.toISOString()},end_time.lte.${end.toISOString()}`
+        )
+        .order('start_time', { ascending: true })
+
+      if (error) {
+        console.error('Error fetching events:', error)
+        throw error
+      }
+      
+      console.log('Fetched events:', data?.length || 0)
+      setEvents(data || [])
+      setLastFetchedWeek(new Date(weekAnchor))
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Error desconocido")
+      const errorMessage = e instanceof Error ? e.message : 'Error desconocido'
+      console.error('Error in useUserEvents:', errorMessage)
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
-  }, [weekAnchor])
+  }, [weekAnchor, loading, lastFetchedWeek])
 
+  // Efecto para cargar los eventos cuando cambia la semana
   useEffect(() => {
     fetchEvents()
   }, [fetchEvents])
 
-  return { events, loading, error, refreshEvents: fetchEvents }
+  return { 
+    events, 
+    loading, 
+    error, 
+    refreshEvents: () => {
+      setLastFetchedWeek(null)
+      return fetchEvents()
+    } 
+  }
 }
 
 function computeOverlaps(dayEvents: CalendarEvent[]) {
