@@ -71,7 +71,6 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
     try {
       const supabase = createClient()
 
-      // Get current user
       const {
         data: { user },
         error: userError,
@@ -80,7 +79,6 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
         throw new Error("Usuario no autenticado")
       }
 
-      // Get session with Google tokens
       const {
         data: { session },
         error: sessionError,
@@ -149,7 +147,6 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
         all_day: eventData.all_day,
         color_id: eventData.colorId || null,
         color_hex: getGoogleCalendarColorHex(eventData.colorId),
-        recurrence_rule: eventData.recurrence?.[0] || null,
       })
 
       if (insertError) {
@@ -172,7 +169,6 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
     try {
       const supabase = createClient()
 
-      // Get current user
       const {
         data: { user },
         error: userError,
@@ -181,7 +177,6 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
         throw new Error("Usuario no autenticado")
       }
 
-      // Get session with Google tokens
       const {
         data: { session },
         error: sessionError,
@@ -211,7 +206,6 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
             start_time: event.all_day ? event.start.date : event.start.dateTime,
             end_time: event.all_day ? event.end.date : event.end.dateTime,
             all_day: event.all_day,
-            recurrence_rule: event.recurrence?.[0] || null,
           })
           .eq("id", event.id)
           .eq("user_id", user.id)
@@ -277,7 +271,6 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
           all_day: event.all_day,
           color_id: updatedEvent.colorId || null,
           color_hex: getGoogleCalendarColorHex(updatedEvent.colorId),
-          recurrence_rule: event.recurrence?.[0] || null,
         })
         .eq("id", event.id)
         .eq("user_id", user.id)
@@ -302,7 +295,6 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
     try {
       const supabase = createClient()
 
-      // Get current user
       const {
         data: { user },
         error: userError,
@@ -311,7 +303,6 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
         throw new Error("Usuario no autenticado")
       }
 
-      // Get session with Google tokens
       const {
         data: { session },
         error: sessionError,
@@ -385,7 +376,6 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
       console.log("🔍 Iniciando syncEvents...")
       const supabase = createClient()
 
-      // Get current user
       const {
         data: { user },
         error: userError,
@@ -396,7 +386,6 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
       }
       console.log("✅ Usuario autenticado:", user.id)
 
-      // Get session with Google tokens
       const {
         data: { session },
         error: sessionError,
@@ -408,7 +397,6 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
       }
       console.log("✅ Sesión con tokens de Google encontrada")
 
-      // Calculate week range (Monday to Sunday)
       const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 })
       const timeMin = weekStart.toISOString()
       const timeMax = weekEnd.toISOString()
@@ -497,7 +485,6 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
           all_day: !event.start.dateTime,
           color_id: event.colorId || null,
           color_hex: getGoogleCalendarColorHex(event.colorId),
-          recurrence_rule: event.recurrence?.[0] || null,
         }
 
         const key = `${eventData.title}_${eventData.start_time}_${eventData.end_time}_${eventData.all_day}`
