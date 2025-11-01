@@ -38,6 +38,19 @@ function getEventColor(event: CalendarEvent): string {
   return colors[Math.abs(hash) % colors.length]
 }
 
+const EVENT_COLORS = [
+  "#3b82f6", // Azul
+  "#ef4444", // Rojo
+  "#10b981", // Verde
+  "#f59e0b", // Amarillo
+  "#8b5cf6", // Púrpura
+  "#ec4899", // Rosa
+  "#06b6d4", // Cian
+  "#84cc16", // Lima
+  "#f97316", // Naranja
+  "#6366f1", // Índigo
+]
+
 interface CalendarEvent {
   id: string
   title: string
@@ -49,6 +62,7 @@ interface CalendarEvent {
   color: string | null
   color_id: string | null
   color_hex: string | null
+  google_event_id?: string // New field for Google Calendar event ID
 }
 
 interface EventDetailsModalProps {
@@ -56,10 +70,11 @@ interface EventDetailsModalProps {
   onClose: () => void
   event: CalendarEvent | null
   onEdit: (event: CalendarEvent) => void
-  onDelete: (eventId: string) => void // Agregando prop para eliminar
+  onDelete: (eventId: string) => void
+  onColorChange: (eventId: string, color: string) => void // Nueva prop para cambiar color
 }
 
-function EventDetailsModal({ isOpen, onClose, event, onEdit, onDelete }: EventDetailsModalProps) {
+function EventDetailsModal({ isOpen, onClose, event, onEdit, onDelete, onColorChange }: EventDetailsModalProps) {
   if (!isOpen || !event) return null
 
   const startDate = new Date(event.start_time)
@@ -140,6 +155,26 @@ function EventDetailsModal({ isOpen, onClose, event, onEdit, onDelete }: EventDe
                 <div className="text-sm text-muted-foreground">{event.description}</div>
               </div>
             )}
+
+            <div className="border-t border-border pt-3 mt-3">
+              <label className="text-sm font-medium text-foreground mb-2 block">Color del evento</label>
+              <div className="flex flex-wrap gap-2">
+                {EVENT_COLORS.map((color) => (
+                  <button
+                    key={color}
+                    onClick={() => {
+                      onColorChange(event.id, color)
+                      onClose()
+                    }}
+                    className={`w-8 h-8 rounded-full border-2 transition-all hover:scale-110 ${
+                      getEventColor(event) === color ? "border-foreground scale-110" : "border-transparent"
+                    }`}
+                    style={{ backgroundColor: color }}
+                    title={`Cambiar color a ${color}`}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
 
           <div className="flex gap-2 pt-6 mt-6 border-t border-border">
@@ -192,15 +227,6 @@ function EventDetailsModal({ isOpen, onClose, event, onEdit, onDelete }: EventDe
   )
 }
 
-interface CreateEventModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onSave: (event: Omit<CalendarEvent, "id">) => Promise<void>
-  selectedDate?: Date
-  selectedTime?: string
-  editingEvent?: CalendarEvent | null
-}
-
 function CreateEventModal({
   isOpen,
   onClose,
@@ -225,6 +251,7 @@ function CreateEventModal({
         ? format(new Date(`2000-01-01T${selectedTime}`).getTime() + 60 * 60 * 1000, "HH:mm")
         : "10:00",
     allDay: editingEvent?.all_day || false,
+    color: editingEvent?.color_hex || EVENT_COLORS[0],
   })
 
   const [loading, setLoading] = useState(false)
@@ -240,11 +267,13 @@ function CreateEventModal({
         startTime: format(new Date(editingEvent.start_time), "HH:mm"),
         endTime: format(new Date(editingEvent.end_time), "HH:mm"),
         allDay: editingEvent.all_day,
+        color: editingEvent.color_hex || EVENT_COLORS[0],
       })
     } else if (selectedDate) {
       setFormData((prev) => ({
         ...prev,
         startDate: format(selectedDate, "yyyy-MM-dd"),
+        color: EVENT_COLORS[0],
       }))
     }
     if (selectedTime && !editingEvent) {
@@ -267,13 +296,25 @@ function CreateEventModal({
     setLoading(true)
     setError(null)
     try {
-      // Crear fechas en la zona horaria local
       const startDate = new Date(`${formData.startDate}T${formData.startTime}:00`)
       const endDate = new Date(`${formData.startDate}T${formData.endTime}:00`)
 
       const startDateTime = formData.allDay ? `${formData.startDate}T00:00:00.000Z` : startDate.toISOString()
 
       const endDateTime = formData.allDay ? `${formData.startDate}T23:59:59.999Z` : endDate.toISOString()
+
+      const colorMapping: Record<string, string> = {
+        "#3b82f6": "1",
+        "#ef4444": "11",
+        "#10b981": "10",
+        "#f59e0b": "5",
+        "#8b5cf6": "3",
+        "#ec4899": "4",
+        "#06b6d4": "7",
+        "#84cc16": "2",
+        "#f97316": "6",
+        "#6366f1": "9",
+      }
 
       await onSave({
         title: formData.title,
@@ -282,9 +323,9 @@ function CreateEventModal({
         start_time: startDateTime,
         end_time: endDateTime,
         all_day: formData.allDay,
-        color: null,
-        color_id: null,
-        color_hex: null,
+        color: formData.color,
+        color_id: colorMapping[formData.color] || "1",
+        color_hex: formData.color,
       })
 
       onClose()
@@ -296,6 +337,7 @@ function CreateEventModal({
         startTime: "09:00",
         endTime: "10:00",
         allDay: false,
+        color: EVENT_COLORS[0],
       })
       setError(null)
     } catch (error) {
@@ -351,6 +393,24 @@ function CreateEventModal({
                 className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="Ubicación del evento"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Color del evento</label>
+              <div className="flex flex-wrap gap-2">
+                {EVENT_COLORS.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    onClick={() => setFormData((prev) => ({ ...prev, color }))}
+                    className={`w-8 h-8 rounded-full border-2 transition-all hover:scale-110 ${
+                      formData.color === color ? "border-foreground scale-110" : "border-transparent"
+                    }`}
+                    style={{ backgroundColor: color }}
+                    title={`Seleccionar color ${color}`}
+                  />
+                ))}
+              </div>
             </div>
 
             <div className="flex items-center gap-2">
@@ -431,9 +491,18 @@ function CreateEventModal({
   )
 }
 
+interface CreateEventModalProps {
+  isOpen: boolean
+  onClose: () => void
+  onSave: (event: Omit<CalendarEvent, "id">) => Promise<void>
+  selectedDate?: Date
+  selectedTime?: string
+  editingEvent?: CalendarEvent | null
+}
+
 function getWeekRange(date: Date) {
-  const start = startOfWeek(date, { weekStartsOn: 1 })
-  const end = endOfWeek(date, { weekStartsOn: 1 })
+  const start = startOfWeek(date, { weekStartsOn: 0 })
+  const end = endOfWeek(date, { weekStartsOn: 0 })
   return { start, end }
 }
 
@@ -448,82 +517,80 @@ function useUserEvents(weekAnchor: Date) {
   const [lastFetchedWeek, setLastFetchedWeek] = useState<Date | null>(null)
 
   const fetchEvents = useCallback(async () => {
-    // Evitar recargas innecesarias si ya estamos cargando o si la semana no ha cambiado
     const weekKey = weekAnchor.toDateString()
     const lastFetchedKey = lastFetchedWeek?.toDateString()
-    
-    if (loading || (lastFetchedKey === weekKey)) {
+
+    if (loading || lastFetchedKey === weekKey) {
       return
     }
 
     setLoading(true)
     setError(null)
-    
+
     try {
       const supabase = createClient()
       const { start, end } = getWeekRange(weekAnchor)
-      
-      const { data: { user } } = await supabase.auth.getUser()
-      
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
       if (!user) {
         setEvents([])
         setLoading(false)
         return
       }
 
-      console.log('Fetching events for week:', {
+      console.log("Fetching events for week:", {
         start: start.toISOString(),
         end: end.toISOString(),
-        weekAnchor: weekAnchor.toISOString()
+        weekAnchor: weekAnchor.toISOString(),
       })
 
-      // Consulta más amplia para asegurar que obtenemos todos los eventos necesarios
       const { data, error } = await supabase
-        .from('calendar_events')
-        .select('*')
-        .eq('user_id', user.id)
+        .from("calendar_events")
+        .select("*")
+        .eq("user_id", user.id)
         .or(
           `and(start_time.lte.${end.toISOString()},end_time.gte.${start.toISOString()}),` +
-          `start_time.gte.${start.toISOString()},start_time.lte.${end.toISOString()},` +
-          `end_time.gte.${start.toISOString()},end_time.lte.${end.toISOString()}`
+            `start_time.gte.${start.toISOString()},start_time.lte.${end.toISOString()},` +
+            `end_time.gte.${start.toISOString()},end_time.lte.${end.toISOString()}`,
         )
-        .order('start_time', { ascending: true })
+        .order("start_time", { ascending: true })
 
       if (error) {
-        console.error('Error fetching events:', error)
+        console.error("Error fetching events:", error)
         throw error
       }
-      
-      console.log('Fetched events:', data?.length || 0)
+
+      console.log("Fetched events:", data?.length || 0)
       setEvents(data || [])
       setLastFetchedWeek(new Date(weekAnchor))
     } catch (e) {
-      const errorMessage = e instanceof Error ? e.message : 'Error desconocido'
-      console.error('Error in useUserEvents:', errorMessage)
+      const errorMessage = e instanceof Error ? e.message : "Error desconocido"
+      console.error("Error in useUserEvents:", errorMessage)
       setError(errorMessage)
     } finally {
       setLoading(false)
     }
   }, [weekAnchor, loading, lastFetchedWeek])
 
-  // Efecto para cargar los eventos cuando cambia la semana
   useEffect(() => {
     fetchEvents()
   }, [fetchEvents])
 
-  return { 
-    events, 
-    loading, 
-    error, 
+  return {
+    events,
+    loading,
+    error,
     refreshEvents: () => {
       setLastFetchedWeek(null)
       return fetchEvents()
-    } 
+    },
   }
 }
 
 function computeOverlaps(dayEvents: CalendarEvent[]) {
-  // Improved algorithm for better event sizing
   const columns: CalendarEvent[][] = []
 
   for (const event of dayEvents) {
@@ -531,7 +598,6 @@ function computeOverlaps(dayEvents: CalendarEvent[]) {
     const eventStart = new Date(event.start_time)
     const eventEnd = new Date(event.end_time)
 
-    // Try to find a column where this event doesn't overlap
     for (const col of columns) {
       const hasOverlap = col.some((existingEvent) => {
         const existingStart = new Date(existingEvent.start_time)
@@ -551,13 +617,11 @@ function computeOverlaps(dayEvents: CalendarEvent[]) {
     }
   }
 
-  // Map event to position with better width calculation
   const positions = new Map<string, { column: number; span: number; totalColumns: number }>()
-  const total = Math.max(columns.length, 1) // Ensure at least 1 column
+  const total = Math.max(columns.length, 1)
 
   columns.forEach((col, colIndex) => {
     col.forEach((ev) => {
-      // Calculate how many columns this event can span
       const eventStart = new Date(ev.start_time)
       const eventEnd = new Date(ev.end_time)
 
@@ -577,7 +641,7 @@ function computeOverlaps(dayEvents: CalendarEvent[]) {
 
       positions.set(ev.id, {
         column: colIndex,
-        span: Math.min(maxSpan, 2), // Limit span to 2 for better readability
+        span: Math.min(maxSpan, 2),
         totalColumns: total,
       })
     })
@@ -594,7 +658,15 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
   const [anchor, setAnchor] = useState(startOfDay(new Date()))
   const { start, end } = useMemo(() => getWeekRange(anchor), [anchor])
   const { events, refreshEvents } = useUserEvents(anchor)
-  const { syncEvents, createEvent, updateEvent, deleteEvent, removeDuplicates, error: syncError } = useGoogleCalendar() // Agregando updateEvent y deleteEvent
+  const {
+    syncEvents,
+    createEvent,
+    updateEvent,
+    deleteEvent,
+    removeDuplicates,
+    error: syncError,
+    updateColorEvent,
+  } = useGoogleCalendar()
   const { session, connectGoogleCalendar, loading: authLoading } = useAuth()
   const [syncMessage, setSyncMessage] = useState<string | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -606,7 +678,6 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
   const [isSyncing, setIsSyncing] = useState(false)
   const [hasCalendarAccess, setHasCalendarAccess] = useState(false)
 
-  // Check if user has Google Calendar access
   useEffect(() => {
     const checkCalendarAccess = async () => {
       if (!session?.provider_token) {
@@ -615,7 +686,6 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
       }
 
       try {
-        // Test if the token has calendar permissions by making a simple API call
         const response = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary", {
           method: "GET",
           headers: {
@@ -627,7 +697,6 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
         if (response.ok) {
           setHasCalendarAccess(true)
         } else if (response.status === 403) {
-          // Token exists but doesn't have calendar permissions
           setHasCalendarAccess(false)
         } else {
           setHasCalendarAccess(false)
@@ -641,7 +710,6 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
     checkCalendarAccess()
   }, [session])
 
-  // Autoscroll hasta la mitad de la página al cargar
   useEffect(() => {
     const scrollToMiddle = () => {
       const scrollContainer = document.querySelector(".calendar-container")
@@ -656,7 +724,6 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
       }
     }
 
-    // Ejecutar después de que el componente se haya renderizado
     const timeoutId = setTimeout(scrollToMiddle, 100)
     return () => clearTimeout(timeoutId)
   }, [])
@@ -665,7 +732,6 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
 
   const handleCreateEvent = async (eventData: Omit<CalendarEvent, "id">) => {
     try {
-      // Validar que el título no esté vacío
       if (!eventData.title || eventData.title.trim() === "") {
         throw new Error("El título del evento es obligatorio")
       }
@@ -678,44 +744,55 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
         isEditing: !!editingEvent,
       })
 
-      // Convert to Google Calendar format
+      const colorMapping: Record<string, string> = {
+        "#3b82f6": "1",
+        "#ef4444": "11",
+        "#10b981": "10",
+        "#f59e0b": "5",
+        "#8b5cf6": "3",
+        "#ec4899": "4",
+        "#06b6d4": "7",
+        "#84cc16": "2",
+        "#f97316": "6",
+        "#6366f1": "9",
+      }
+
+      // Asegurarse de que el color tenga un valor predeterminado
+      const eventColor = eventData.color || "#3b82f6"
       const googleEventData = {
         title: eventData.title.trim(),
         description: eventData.description || undefined,
         location: eventData.location || undefined,
-        start: {
-          dateTime: eventData.all_day ? undefined : eventData.start_time,
-          date: eventData.all_day ? eventData.start_time.split("T")[0] : undefined,
-        },
-        end: {
-          dateTime: eventData.all_day ? undefined : eventData.end_time,
-          date: eventData.all_day ? eventData.end_time.split("T")[0] : undefined,
-        },
         all_day: eventData.all_day,
+        start: eventData.all_day
+          ? { date: format(new Date(eventData.start_time), "yyyy-MM-dd") }
+          : { dateTime: new Date(eventData.start_time).toISOString() },
+        end: eventData.all_day
+          ? { date: format(new Date(eventData.end_time), "yyyy-MM-dd") }
+          : { dateTime: new Date(eventData.end_time).toISOString() },
+        colorId: colorMapping[eventColor] || "1",
+        color: eventColor,
+        color_hex: eventColor,
+        color_id: colorMapping[eventColor] || "1",
       }
 
       console.log("Datos para Google Calendar:", googleEventData)
 
-      // Si estamos editando, actualizar el evento existente
       if (editingEvent) {
         console.log("Actualizando evento existente:", editingEvent.id)
         await updateEvent({ id: editingEvent.id, ...googleEventData })
       } else {
-        // Si no, crear un nuevo evento
         console.log("Creando nuevo evento")
         await createEvent(googleEventData)
       }
 
-      // Refresh events
       await refreshEvents()
 
-      // Limpiar el estado de edición
       setEditingEvent(null)
     } catch (error) {
       console.error("Error creating/updating event:", error)
       const errorMessage = error instanceof Error ? error.message : "Error desconocido"
 
-      // Check if it's a permissions error
       if (errorMessage.includes("PERMISSIONS_REQUIRED")) {
         setSyncMessage("❌ Necesitas conectar tu Google Calendar para crear eventos")
         setHasCalendarAccess(false)
@@ -734,11 +811,71 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
     setShowCreateModal(true)
   }
 
-  // Función para actualizar desde la BD local
+  const handleColorChange = async (eventId: string, newColor: string) => {
+    try {
+      const supabase = createClient()
+
+      const colorMapping: Record<string, string> = {
+        "#3b82f6": "1",
+        "#ef4444": "11",
+        "#10b981": "10",
+        "#f59e0b": "5",
+        "#8b5cf6": "3",
+        "#ec4899": "4",
+        "#06b6d4": "7",
+        "#84cc16": "2",
+        "#f97316": "6",
+        "#6366f1": "9",
+      }
+
+      const googleColorId = colorMapping[newColor] || "1"
+
+      console.log("[v0] Updating color - Local:", newColor, "Google ID:", googleColorId)
+
+      const { error: supabaseError } = await supabase
+        .from("calendar_events")
+        .update({ color_hex: newColor, color_id: googleColorId })
+        .eq("id", eventId)
+
+      if (supabaseError) throw supabaseError
+
+      if (hasCalendarAccess && session?.provider_token) {
+        try {
+          const { data: eventData, error: fetchError } = await supabase
+            .from("calendar_events")
+            .select("google_event_id")
+            .eq("id", eventId)
+            .single()
+
+          if (fetchError || !eventData) {
+            console.warn("[v0] Could not fetch event data for Google Calendar sync")
+          } else if (eventData.google_event_id) {
+            await updateColorEvent(eventData.google_event_id, googleColorId)
+            console.log("[v0] Event color updated in Google Calendar")
+          } else {
+            console.log("[v0] Event has no google_event_id, skipping Google Calendar update")
+          }
+        } catch (googleError) {
+          console.error("[v0] Error updating color in Google Calendar:", googleError)
+        }
+      }
+
+      setSelectedEvent((prev) => (prev ? { ...prev, color_hex: newColor, color_id: googleColorId } : null))
+
+      await refreshEvents()
+
+      setSyncMessage("✅ Color del evento actualizado")
+      setTimeout(() => setSyncMessage(null), 3000)
+    } catch (error) {
+      console.error("[v0] Error updating event color:", error)
+      setSyncMessage("❌ Error al actualizar el color del evento")
+      setTimeout(() => setSyncMessage(null), 5000)
+    }
+  }
+
   const handleUpdateFromDB = useCallback(async () => {
     setIsUpdating(true)
     try {
-      // Recargar solo los eventos sin recargar la página
       await refreshEvents()
     } catch (error) {
       console.error("Error updating from database:", error)
@@ -752,7 +889,6 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
       console.log("Eliminando evento:", eventId)
       await deleteEvent(eventId)
 
-      // Refresh events
       await refreshEvents()
 
       setSyncMessage("Evento eliminado correctamente")
@@ -765,7 +901,6 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
     }
   }
 
-  // Función para sincronizar con Google Calendar y eliminar duplicados
   const handleSyncWithGoogle = useCallback(async () => {
     setIsSyncing(true)
     setSyncMessage("Sincronizando con Google...")
@@ -781,10 +916,8 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
       console.error("Error syncing with Google:", error)
       const errorMessage = error instanceof Error ? error.message : "Error desconocido"
 
-      // Check if it's a permissions error
       if (errorMessage.includes("PERMISSIONS_REQUIRED")) {
         setSyncMessage("❌ Necesitas conectar tu Google Calendar primero")
-        // Update the calendar access state
         setHasCalendarAccess(false)
       } else {
         setSyncMessage(`Error en la sincronización: ${errorMessage}`)
@@ -795,32 +928,28 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
     }
   }, [syncEvents, removeDuplicates, start])
 
-  // Actualización automática cada 1 minuto desde la BD
   useEffect(() => {
     const interval = setInterval(() => {
       handleUpdateFromDB()
-    }, 60000) // 1 minuto
+    }, 60000)
 
     return () => clearInterval(interval)
   }, [handleUpdateFromDB])
 
-  // Sincronización automática cada 5 minutos con Google Calendar
   useEffect(() => {
     const interval = setInterval(() => {
       handleSyncWithGoogle()
-    }, 300000) // 5 minutos
+    }, 300000)
 
     return () => clearInterval(interval)
   }, [handleSyncWithGoogle, syncEvents, removeDuplicates, start])
 
-  // Group events by day
   const eventsByDay = useMemo(() => {
     const map = new Map<string, CalendarEvent[]>()
-    const days = Array.from({ length: 7 }, (_, i) => addDays(anchor, i))
+    const days = Array.from({ length: 7 }, (_, i) => addDays(start, i))
     days.forEach((d) => map.set(format(d, "yyyy-MM-dd"), []))
     for (const ev of events) {
       const evStart = new Date(ev.start_time)
-      // Include multi-day events: assign to each day they intersect
       for (const day of days) {
         const same = isSameDay(day, evStart) || (evStart < day && new Date(ev.end_time) > day)
         if (same) {
@@ -829,18 +958,16 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
         }
       }
     }
-    // Sort by start time within each day
     for (const key of map.keys()) {
       map.get(key)!.sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
     }
     return map
-  }, [events, anchor])
+  }, [events, start])
 
   const calendarContent = (
     <div
       className={`calendar-container ${isDashboard ? "h-full flex flex-col bg-background" : "h-screen flex flex-col bg-background"}`}
     >
-      {/* Mensaje de estado */}
       {(isUpdating || isSyncing || syncMessage) && (
         <div className="px-6 py-2 bg-primary/10 text-primary text-sm text-center">
           {isUpdating && "🔄 Actualizando desde la base de datos..."}
@@ -849,7 +976,6 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
         </div>
       )}
 
-      {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:backdrop-blur sticky top-12 z-40">
         <div className="flex items-center gap-2">
           <button
@@ -893,7 +1019,6 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Google Calendar Connection Button - Only show if no access */}
           {!hasCalendarAccess && (
             <button
               onClick={connectGoogleCalendar}
@@ -924,7 +1049,6 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
             </button>
           )}
 
-          {/* Status indicator - Only show if connected */}
           {hasCalendarAccess && (
             <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-green-100 text-green-800 border border-green-200">
               <div className="w-2 h-2 rounded-full bg-green-500"></div>
@@ -932,7 +1056,6 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
             </div>
           )}
 
-          {/* Botones de actualización - Only show if connected */}
           {hasCalendarAccess && (
             <>
               <button
@@ -995,7 +1118,6 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
         </div>
       </div>
 
-      {/* Status messages */}
       {(syncMessage || syncError) && (
         <div
           className={`px-6 py-3 text-sm ${
@@ -1010,7 +1132,6 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
         </div>
       )}
 
-      {/* Info message when no calendar access */}
       {!hasCalendarAccess && (
         <div className="px-6 py-4 bg-blue-50 border-l-4 border-blue-400 text-blue-800">
           <div className="flex items-start">
@@ -1036,12 +1157,10 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
         </div>
       )}
 
-      {/* Calendar Grid */}
       <div className="flex-1 flex flex-col min-h-0">
-        {/* Day headers */}
-        <div className="grid grid-cols-8 border-b border-border bg-background sticky top-[calc(3rem+4.5rem)] z-30">
+        <div className="grid grid-cols-8 border-b border-border bg-background sticky top-[3rem] z-30">
           <div className="border-r border-border px-2 py-2 text-xs text-muted-foreground font-medium">Hora</div>
-          {Array.from({ length: 7 }, (_, i) => addDays(anchor, i)).map((d) => (
+          {Array.from({ length: 7 }, (_, i) => addDays(start, i)).map((d) => (
             <div
               key={format(d, "yyyy-MM-dd")}
               className={`px-2 py-2 border-r border-border text-center ${isToday(d) ? "bg-primary/5" : ""}`}
@@ -1054,9 +1173,7 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
           ))}
         </div>
 
-        {/* Main calendar grid */}
         <div className="flex-1 grid grid-cols-8 min-h-0">
-          {/* Hours gutter */}
           <div className="border-r border-border text-xs text-muted-foreground bg-muted/30">
             {Array.from({ length: 24 }, (_, h) => (
               <div key={h} className="h-16 border-b border-border/60 px-2 relative flex items-start">
@@ -1066,8 +1183,7 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
             ))}
           </div>
 
-          {/* Days columns */}
-          {Array.from({ length: 7 }, (_, i) => addDays(anchor, i)).map((day) => {
+          {Array.from({ length: 7 }, (_, i) => addDays(start, i)).map((day) => {
             const key = format(day, "yyyy-MM-dd")
             const dayEvents = (eventsByDay.get(key) || []).filter((ev) => !ev.all_day)
             const positions = computeOverlaps(dayEvents)
@@ -1079,11 +1195,9 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
                 key={key}
                 className={`relative border-r border-border ${isToday(day) ? "bg-primary/10" : "bg-muted/20"}`}
               >
-                {/* Hour slots background */}
                 {Array.from({ length: 24 }, (_, h) => (
                   <div key={h} className="h-16 border-b border-border/60 relative group">
                     <div className="absolute left-0 right-0 top-1/2 border-t border-border/50" />
-                    {/* Clickable time slots */}
                     <div
                       className="absolute inset-0 hover:bg-primary/10 cursor-pointer transition-colors"
                       onClick={() => handleTimeSlotClick(day, `${h.toString().padStart(2, "0")}:00`)}
@@ -1091,7 +1205,6 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
                   </div>
                 ))}
 
-                {/* Current time indicator */}
                 {showNow && (
                   <div className="absolute left-0 right-0 z-10" style={{ top: `${nowTop}%` }}>
                     <div className="flex items-center">
@@ -1101,7 +1214,6 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
                   </div>
                 )}
 
-                {/* Events */}
                 <div className="absolute inset-0 p-1">
                   {dayEvents.map((ev) => {
                     const startDate = new Date(ev.start_time)
@@ -1160,10 +1272,10 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
           setEditingEvent(event)
           setShowCreateModal(true)
         }}
-        onDelete={handleDeleteEvent} // Pasando la función de eliminar
+        onDelete={handleDeleteEvent}
+        onColorChange={handleColorChange}
       />
 
-      {/* Create/Edit Event Modal */}
       <CreateEventModal
         isOpen={showCreateModal}
         onClose={() => {

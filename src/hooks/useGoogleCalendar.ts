@@ -20,6 +20,7 @@ interface GoogleCalendarEvent {
   }
   all_day?: boolean
   colorId?: string
+  recurrence?: string[]
 }
 
 // Mapeo de colores de Google Calendar
@@ -52,6 +53,7 @@ interface UseGoogleCalendarReturn {
   clearError: () => void
   removeDuplicates: (weekStart: Date) => Promise<void>
   removeAllDuplicates: () => Promise<void>
+  updateColorEvent: (googleEventId: string, colorId: string) => Promise<void> // Added updateColorEvent function
 }
 
 export function useGoogleCalendar(): UseGoogleCalendarReturn {
@@ -89,7 +91,7 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
 
       // Create event in Google Calendar
       const googleEvent = {
-        summary: eventData.title, // Google Calendar API usa 'summary' para el título
+        summary: eventData.title,
         description: eventData.description,
         location: eventData.location,
         start: eventData.all_day
@@ -98,6 +100,8 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
         end: eventData.all_day
           ? { date: eventData.end.date || eventData.end.dateTime?.split("T")[0] }
           : { dateTime: eventData.end.dateTime || eventData.end.date },
+        ...(eventData.colorId && { colorId: eventData.colorId }),
+        ...(eventData.recurrence && eventData.recurrence.length > 0 && { recurrence: eventData.recurrence }),
       }
 
       const response = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events", {
@@ -136,15 +140,16 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
 
       const { error: insertError } = await supabase.from("calendar_events").insert({
         user_id: user.id,
-        google_event_id: createdEvent.id, // Store Google Calendar event ID
+        google_event_id: createdEvent.id,
         title: eventData.title,
         description: eventData.description,
         location: eventData.location,
         start_time: eventData.all_day ? eventData.start.date : eventData.start.dateTime,
         end_time: eventData.all_day ? eventData.end.date : eventData.end.dateTime,
         all_day: eventData.all_day,
-        color_id: createdEvent.colorId || null,
-        color_hex: getGoogleCalendarColorHex(createdEvent.colorId),
+        color_id: eventData.colorId || null,
+        color_hex: getGoogleCalendarColorHex(eventData.colorId),
+        recurrence_rule: eventData.recurrence?.[0] || null,
       })
 
       if (insertError) {
@@ -197,7 +202,6 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
       }
 
       if (!localEvent.google_event_id) {
-        // This is a local-only event, just update the database
         const { error: updateError } = await supabase
           .from("calendar_events")
           .update({
@@ -207,6 +211,7 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
             start_time: event.all_day ? event.start.date : event.start.dateTime,
             end_time: event.all_day ? event.end.date : event.end.dateTime,
             all_day: event.all_day,
+            recurrence_rule: event.recurrence?.[0] || null,
           })
           .eq("id", event.id)
           .eq("user_id", user.id)
@@ -217,7 +222,6 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
         return
       }
 
-      // Update event in Google Calendar using google_event_id
       const googleEvent = {
         summary: event.title,
         description: event.description,
@@ -228,6 +232,8 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
         end: event.all_day
           ? { date: event.end.date || event.end.dateTime?.split("T")[0] }
           : { dateTime: event.end.dateTime || event.end.date },
+        ...(event.colorId && { colorId: event.colorId }),
+        ...(event.recurrence && event.recurrence.length > 0 && { recurrence: event.recurrence }),
       }
 
       const response = await fetch(
@@ -260,7 +266,6 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
 
       const updatedEvent = await response.json()
 
-      // Update in local database
       const { error: updateError } = await supabase
         .from("calendar_events")
         .update({
@@ -272,6 +277,7 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
           all_day: event.all_day,
           color_id: updatedEvent.colorId || null,
           color_hex: getGoogleCalendarColorHex(updatedEvent.colorId),
+          recurrence_rule: event.recurrence?.[0] || null,
         })
         .eq("id", event.id)
         .eq("user_id", user.id)
@@ -353,7 +359,6 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
         }
       }
 
-      // Delete from local database
       const { error: deleteError } = await supabase
         .from("calendar_events")
         .delete()
@@ -415,7 +420,6 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
         timeMax,
       })
 
-      // Call Google Calendar API directly from frontend
       const url = new URL("https://www.googleapis.com/calendar/v3/calendars/primary/events")
       url.searchParams.set("timeMin", timeMin)
       url.searchParams.set("timeMax", timeMax)
@@ -445,7 +449,6 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
         }
 
         if (response.status === 403) {
-          // Check if it's a scope issue
           try {
             const errorData = JSON.parse(errorText)
             if (errorData.error?.details?.[0]?.reason === "ACCESS_TOKEN_SCOPE_INSUFFICIENT") {
@@ -469,7 +472,6 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
         `Encontrados ${events.length} eventos en Google Calendar para la semana del ${format(weekStart, "dd/MM")} al ${format(weekEnd, "dd/MM/yyyy")}`,
       )
 
-      // Clear existing events for this week first
       const { error: deleteError } = await supabase
         .from("calendar_events")
         .delete()
@@ -481,13 +483,12 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
         throw new Error(`Error eliminando eventos existentes: ${deleteError.message}`)
       }
 
-      // Process events and remove duplicates before inserting
       const processedEvents = new Map()
 
       for (const event of events) {
         const eventData = {
           user_id: user.id,
-          google_event_id: event.id, // Store Google Calendar event ID
+          google_event_id: event.id,
           title: event.summary || "Sin título",
           description: event.description || null,
           location: event.location || null,
@@ -496,21 +497,18 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
           all_day: !event.start.dateTime,
           color_id: event.colorId || null,
           color_hex: getGoogleCalendarColorHex(event.colorId),
+          recurrence_rule: event.recurrence?.[0] || null,
         }
 
-        // Create a unique key to identify duplicates
         const key = `${eventData.title}_${eventData.start_time}_${eventData.end_time}_${eventData.all_day}`
 
-        // Only keep the first occurrence of each event
         if (!processedEvents.has(key)) {
           processedEvents.set(key, eventData)
         }
       }
 
-      // Convert map to array for insertion
       const eventsToInsert = Array.from(processedEvents.values())
 
-      // Insert processed events
       if (eventsToInsert.length > 0) {
         const { error: insertError } = await supabase.from("calendar_events").insert(eventsToInsert)
 
@@ -538,7 +536,6 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
     try {
       const supabase = createClient()
 
-      // Get current user
       const {
         data: { user },
         error: userError,
@@ -547,19 +544,17 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
         throw new Error("Usuario no autenticado")
       }
 
-      // Calculate week range
       const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 })
       const timeMin = weekStart.toISOString()
       const timeMax = weekEnd.toISOString()
 
-      // Get all events for this week
       const { data: events, error: fetchError } = await supabase
         .from("calendar_events")
         .select("*")
         .eq("user_id", user.id)
         .gte("start_time", timeMin)
         .lte("start_time", timeMax)
-        .order("created_at", { ascending: true }) // Keep the oldest event
+        .order("created_at", { ascending: true })
 
       if (fetchError) {
         throw new Error(`Error obteniendo eventos: ${fetchError.message}`)
@@ -570,7 +565,6 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
         return
       }
 
-      // Group events by key (title + start_time + end_time + all_day)
       const eventsByKey = new Map()
       const duplicates: string[] = []
 
@@ -578,7 +572,6 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
         const key = `${event.title}_${event.start_time}_${event.end_time}_${event.all_day}`
 
         if (eventsByKey.has(key)) {
-          // This is a duplicate - keep the first one, mark others for deletion
           duplicates.push(event.id)
         } else {
           eventsByKey.set(key, event)
@@ -588,7 +581,6 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
       if (duplicates.length > 0) {
         console.log(`Encontrados ${duplicates.length} eventos duplicados de ${events.length} total`)
 
-        // Delete duplicates in batches to avoid query limits
         const batchSize = 100
         for (let i = 0; i < duplicates.length; i += batchSize) {
           const batch = duplicates.slice(i, i + batchSize)
@@ -619,7 +611,6 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
     try {
       const supabase = createClient()
 
-      // Get current user
       const {
         data: { user },
         error: userError,
@@ -628,12 +619,11 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
         throw new Error("Usuario no autenticado")
       }
 
-      // Get all events for this user
       const { data: events, error: fetchError } = await supabase
         .from("calendar_events")
         .select("*")
         .eq("user_id", user.id)
-        .order("created_at", { ascending: true }) // Keep the oldest event
+        .order("created_at", { ascending: true })
 
       if (fetchError) {
         throw new Error(`Error obteniendo eventos: ${fetchError.message}`)
@@ -644,7 +634,6 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
         return
       }
 
-      // Group events by key (title + start_time + end_time + all_day)
       const eventsByKey = new Map()
       const duplicates: string[] = []
 
@@ -652,7 +641,6 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
         const key = `${event.title}_${event.start_time}_${event.end_time}_${event.all_day}`
 
         if (eventsByKey.has(key)) {
-          // This is a duplicate - keep the first one, mark others for deletion
           duplicates.push(event.id)
         } else {
           eventsByKey.set(key, event)
@@ -662,7 +650,6 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
       if (duplicates.length > 0) {
         console.log(`Encontrados ${duplicates.length} eventos duplicados de ${events.length} total`)
 
-        // Delete duplicates in batches to avoid query limits
         const batchSize = 100
         for (let i = 0; i < duplicates.length; i += batchSize) {
           const batch = duplicates.slice(i, i + batchSize)
@@ -686,6 +673,68 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
     }
   }, [])
 
+  const updateColorEvent = useCallback(async (googleEventId: string, colorId: string) => {
+    setLoading(true)
+    setError(null)
+
+    try {
+      const supabase = createClient()
+
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser()
+      if (userError || !user) {
+        throw new Error("Usuario no autenticado")
+      }
+
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession()
+      if (sessionError || !session?.provider_token) {
+        throw new Error("No se encontraron tokens de Google. Por favor, cierra sesión y vuelve a iniciar.")
+      }
+
+      const response = await fetch(
+        `https://www.googleapis.com/calendar/v3/calendars/primary/events/${googleEventId}?colorId=${colorId}`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${session.provider_token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ colorId }),
+        },
+      )
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error("Token de Google expirado. Por favor, cierra sesión y vuelve a iniciar.")
+        }
+
+        if (response.status === 403) {
+          throw new Error("No tienes permisos para actualizar este evento.")
+        }
+
+        if (response.status === 404) {
+          throw new Error("Evento no encontrado en Google Calendar.")
+        }
+
+        throw new Error(`Error de Google Calendar: ${response.status}`)
+      }
+
+      console.log("[v0] Color actualizado en Google Calendar")
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Error desconocido"
+      setError(errorMessage)
+      console.error("[v0] Error updating event color in Google Calendar:", err)
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
   return {
     loading,
     error,
@@ -696,5 +745,6 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
     clearError,
     removeDuplicates,
     removeAllDuplicates,
+    updateColorEvent,
   }
 }
