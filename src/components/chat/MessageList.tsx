@@ -97,14 +97,14 @@ export default function MessageList({ className = '' }: MessageListProps) {
 
     // Update previous count
     previousMessageCountRef.current = messages.length
-  }, [messages])
+  }, [messages, scrollToBottom])
 
   // Auto-scroll when typing indicator appears
   useEffect(() => {
     if (hasStreamingMessage) {
       scrollToBottom()
     }
-  }, [hasStreamingMessage])
+  }, [hasStreamingMessage, scrollToBottom])
 
   if (loadingMessages && messages.length === 0) {
     return (

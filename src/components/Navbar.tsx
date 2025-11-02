@@ -4,19 +4,18 @@ import { useAuth } from "@/contexts/AuthContext"
 import { useTheme } from "@/contexts/ThemeContext"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 interface NavbarProps {
   className?: string
 }
 
 export default function Navbar({ className = "" }: NavbarProps) {
-  const { user, signOut, session } = useAuth()
+  const { user, signOut } = useAuth()
   const { theme, setTheme } = useTheme()
   const router = useRouter()
   const pathname = usePathname()
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const [hasCalendarAccess, setHasCalendarAccess] = useState(false)
 
   const handleSignOut = async () => {
     await signOut()
@@ -27,15 +26,6 @@ export default function Navbar({ className = "" }: NavbarProps) {
   const handleThemeChange = (newTheme: "light" | "dark" | "system") => {
     setTheme(newTheme)
   }
-
-  // Check if user has Google Calendar access
-  useEffect(() => {
-    if (session?.provider_token) {
-      setHasCalendarAccess(true)
-    } else {
-      setHasCalendarAccess(false)
-    }
-  }, [session])
 
   return (
     <nav

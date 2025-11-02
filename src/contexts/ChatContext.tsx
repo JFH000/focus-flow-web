@@ -273,7 +273,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           const reader = response.body.getReader()
           const decoder = new TextDecoder()
           let buffer = ''
-          let characterQueue: string[] = []
+          const characterQueue: string[] = []
           let isProcessing = false
           let thinkingMessageShown = false
           const chunkSize = 5 // caracteres a mostrar a la vez

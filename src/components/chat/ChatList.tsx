@@ -334,7 +334,7 @@ function groupChatsByDate(chats: Chat[]): ChatGroup[] {
 }
 
 // Componente para el header de grupo
-function GroupHeader({ title, type }: { title: string; type: 'recent' | 'month' }) {
+function GroupHeader({ title }: { title: string }) {
   return (
     <div className="px-3 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider border-b border-border/50">
       {title}
@@ -343,10 +343,9 @@ function GroupHeader({ title, type }: { title: string; type: 'recent' | 'month' 
 }
 
 export default function ChatList({ className = '' }: ChatListProps) {
-  const { chats, loading, loadingMessages } = useChat()
+  const { chats, loading } = useChat()
 
   // Solo mostrar loading si estamos cargando la lista de chats inicialmente
-  // No mostrar loading durante el envío de mensajes (loadingMessages)
   if (loading && chats.length === 0) {
     return (
       <div className={`space-y-2 ${className}`}>
@@ -390,7 +389,7 @@ export default function ChatList({ className = '' }: ChatListProps) {
     <div className={`${className}`}>
       {groupedChats.map((group, groupIndex) => (
         <div key={group.title} className={groupIndex > 0 ? 'mt-4' : ''}>
-          <GroupHeader title={group.title} type={group.type} />
+          <GroupHeader title={group.title} />
           <div className="space-y-1.5 mt-1.5">
             {group.chats.map((chat) => (
               <ChatListItem key={chat.id} chat={chat} />
