@@ -496,13 +496,15 @@ button:disabled,
   animation: messageSlideIn 0.3s ease-out;
 }
 
-/* Typing indicator */
+/* Typing indicator - Improved animation */
 @keyframes typing {
   0%, 60%, 100% {
     transform: translateY(0);
+    opacity: 0.4;
   }
   30% {
-    transform: translateY(-10px);
+    transform: translateY(-8px);
+    opacity: 1;
   }
 }
 
@@ -516,6 +518,22 @@ button:disabled,
 
 .typing-dot:nth-child(2) {
   animation-delay: -0.16s;
+}
+
+/* Modern typing dots animation */
+@keyframes typing-dot {
+  0%, 80%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+.animate-typing-dot {
+  animation: typing-dot 1.4s infinite ease-in-out;
 }
 
 /* File upload drag and drop */

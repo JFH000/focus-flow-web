@@ -81,7 +81,7 @@ export default function ChatPage() {
           <MessageList />
         </div>
         
-        <div className="absolute bottom-0 left-0 right-0 z-10">
+        <div className="absolute bottom-4 left-0 right-0 z-10">
           <ChatInput 
             placeholder="Escribe tu mensaje..."
           />

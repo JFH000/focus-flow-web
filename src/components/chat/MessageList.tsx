@@ -5,7 +5,7 @@ import { Message } from '@/types/database'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { Check, Copy } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
@@ -16,10 +16,28 @@ interface MessageListProps {
 export default function MessageList({ className = '' }: MessageListProps) {
   const { messages, loadingMessages, currentChat } = useChat()
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
   const previousMessageCountRef = useRef(0)
   const isInitialLoadRef = useRef(true)
   const currentChatIdRef = useRef<string | null>(null)
   const lastFocusTimeRef = useRef<number>(0)
+
+  // Function to scroll to absolute bottom
+  const scrollToBottom = useCallback(() => {
+    // Wait for DOM to fully update, then scroll smoothly to absolute bottom
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (scrollContainerRef.current) {
+          const container = scrollContainerRef.current
+          // Scroll to the maximum scroll position
+          container.scrollTo({
+            top: container.scrollHeight,
+            behavior: 'smooth'
+          })
+        }
+      })
+    })
+  }, [])
 
   // Track when page becomes visible again (tab switch) - but don't reload
   useEffect(() => {
@@ -55,31 +73,38 @@ export default function MessageList({ className = '' }: MessageListProps) {
     }
   }, [currentChat?.id])
 
-  // Auto-scroll to bottom when new messages are added (not on initial load or tab switch)
+  // Check if there's a streaming message (must be before conditional returns)
+  const hasStreamingMessage = messages.some(msg => msg.id === 'streaming')
+
+  // Auto-scroll to bottom when new messages are added
   useEffect(() => {
-    // Skip auto-scroll on initial load
-    if (isInitialLoadRef.current) {
+    // Skip auto-scroll only on very first load (initial mount)
+    if (isInitialLoadRef.current && messages.length === 0) {
       isInitialLoadRef.current = false
       return
     }
 
-    // Skip auto-scroll if we just came back from a tab switch (within last 2 seconds)
-    const timeSinceFocus = Date.now() - lastFocusTimeRef.current
-    if (timeSinceFocus < 2000) {
-      return
+    // Always scroll when messages count increases (new message added)
+    if (messages.length > previousMessageCountRef.current) {
+      scrollToBottom()
     }
 
-    // Only auto-scroll if messages count increased (new message added)
-    if (messages.length > previousMessageCountRef.current && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ 
-        behavior: 'smooth',
-        block: 'end'
-      })
+    // Always scroll if the last message is from the user
+    const lastMessage = messages[messages.length - 1]
+    if (lastMessage && lastMessage.role === 'user') {
+      scrollToBottom()
     }
 
     // Update previous count
     previousMessageCountRef.current = messages.length
   }, [messages])
+
+  // Auto-scroll when typing indicator appears
+  useEffect(() => {
+    if (hasStreamingMessage) {
+      scrollToBottom()
+    }
+  }, [hasStreamingMessage])
 
   if (loadingMessages && messages.length === 0) {
     return (
@@ -125,33 +150,12 @@ export default function MessageList({ className = '' }: MessageListProps) {
     )
   }
 
-  // Check if there's a streaming message
-  const hasStreamingMessage = messages.some(msg => msg.id === 'streaming')
-
   return (
-    <div className={`h-full overflow-y-auto message-list ${className}`}>
-      <div className="p-4 pb-32 space-y-6 max-w-4xl mx-auto">
+    <div ref={scrollContainerRef} className={`h-full overflow-y-auto message-list ${className}`}>
+      <div className="p-3 sm:p-4 pb-32 sm:pb-24 space-y-4 sm:space-y-6 max-w-4xl mx-auto">
         {messages.map((message) => (
           <MessageItem key={message.id} message={message} />
         ))}
-        
-        {/* Typing indicator when streaming */}
-        {hasStreamingMessage && (
-          <div className="flex justify-start animate-message-slide-in">
-            <div className="max-w-[80%]">
-              <div className="inline-block w-full p-3 rounded-lg bg-muted text-foreground">
-                <div className="flex items-center gap-2">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                    <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                    <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                  </div>
-                  <span className="text-sm text-muted-foreground">IA está escribiendo...</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
         
         {/* Invisible element to scroll to */}
         <div ref={messagesEndRef} /> 
@@ -178,9 +182,9 @@ function MessageItem({ message }: { message: Message }) {
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} animate-message-slide-in`}>
       {/* Message Content */}
-      <div className={`max-w-[80%] ${isUser ? 'text-right' : 'text-left'}`}>
+      <div className={`max-w-[85%] sm:max-w-[80%] ${isUser ? 'text-right' : 'text-left'}`}>
         <div className={`
-          inline-block w-full px-6 py-2 rounded-2xl shadow-sm relative group
+          inline-block w-full px-4 sm:px-6 py-2 sm:py-3 rounded-2xl shadow-sm relative group
           ${isUser 
             ? 'bg-background text-foreground border-2 border-primary' 
             : isAssistant
@@ -205,8 +209,17 @@ function MessageItem({ message }: { message: Message }) {
             )}
           </button>
 
-          <div className="prose prose-sm max-w-none">
-            {isAssistant ? (
+          <div className="prose prose-sm sm:prose-base max-w-none text-sm sm:text-base">
+            {message.content === 'thinking' ? (
+              <div className="flex items-center gap-2 py-2">
+                <span className="text-foreground/70 font-medium">IA Foco pensando</span>
+                <div className="flex items-center space-x-1">
+                  <div className="w-1.5 h-1.5 bg-purple-600 rounded-full animate-typing-dot"></div>
+                  <div className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-typing-dot" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="w-1.5 h-1.5 bg-purple-600 rounded-full animate-typing-dot" style={{ animationDelay: '0.4s' }}></div>
+                </div>
+              </div>
+            ) : isAssistant ? (
               <ReactMarkdown 
                 remarkPlugins={[remarkGfm]}
               >

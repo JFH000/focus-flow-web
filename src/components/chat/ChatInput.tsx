@@ -2,7 +2,6 @@
 
 import { useChat } from '@/contexts/ChatContext'
 import { getSignedFileUrl } from '@/utils/fileAccess'
-import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
 interface ChatInputProps {
@@ -27,10 +26,7 @@ export default function ChatInput({
     totalChunks?: number
     error?: string
   }>>([])
-  const [showHistory, setShowHistory] = useState(false)
-  const [showButtons, setShowButtons] = useState(true)
-  const { sendMessage, loading, currentChat, chats, loading: loadingChats, clearCurrentChat } = useChat()
-  const router = useRouter()
+  const { sendMessage, loading, currentChat } = useChat()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -198,49 +194,6 @@ export default function ChatInput({
     fileInputRef.current?.click()
   }
 
-  const handleNewChat = () => {
-    // Limpiar el chat actual primero
-    clearCurrentChat()
-    
-    // Si estamos en dashboard, ir a dashboard sin chat
-    if (window.location.pathname.startsWith('/dashboard')) {
-      router.push('/dashboard')
-    } else {
-      router.push('/foco')
-    }
-  }
-
-  const handleChatClick = async (chatId: string) => {
-    // Si estamos en dashboard, ir a dashboard con chat (usando query param)
-    if (window.location.pathname.startsWith('/dashboard')) {
-      router.push(`/dashboard?chat=${chatId}`)
-      setShowHistory(false)
-    } else {
-      // Si estamos en otra página, redirigir
-      router.push(`/foco/${chatId}`)
-      setShowHistory(false)
-    }
-  }
-
-  const handleCalendarClick = () => {
-    const currentPath = window.location.pathname
-    
-    if (currentPath.startsWith('/dashboard')) {
-      // Si estamos en dashboard, ir a foco con el chat actual
-      if (currentChat?.id) {
-        router.push(`/foco/${currentChat.id}`)
-      } else {
-        router.push('/foco')
-      }
-    } else {
-      // Si estamos en foco, ir a dashboard con el chat actual
-      if (currentChat?.id) {
-        router.push(`/dashboard?chat=${currentChat.id}`)
-      } else {
-        router.push('/dashboard')
-      }
-    }
-  }
 
   // Focus textarea when component mounts
   useEffect(() => {
@@ -320,186 +273,39 @@ export default function ChatInput({
       <div 
         className="bg-transparent"
       >
-        <div className="pb-2 px-4 flex justify-center">
+        <div className="pb-1 px-4 flex justify-center">
           <div className="w-full max-w-4xl mx-auto">
             {/* All buttons inside the input area */}
-            <div className="flex items-center gap-2 p-3 bg-gradient-to-r from-purple-600/10 via-blue-600/10 to-purple-600/10 backdrop-blur-xl shadow-lg rounded-3xl border border-purple-500/20">
-              {/* Toggle buttons visibility - outside form but inside input container */}
+            <div className="flex items-center gap-2 py-1.5 px-3 sm:py-2 sm:px-4 bg-gradient-to-r from-purple-600/10 via-blue-600/10 to-purple-600/10 backdrop-blur-xl shadow-lg rounded-xl sm:rounded-2xl border border-purple-500/20">
+              {/* File upload button - Always visible */}
               <button
-                onClick={() => setShowButtons(!showButtons)}
-                className="w-6 h-6 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-all duration-200 flex items-center justify-center"
-                title={showButtons ? "Ocultar botones" : "Mostrar botones"}
+                type="button"
+                onClick={handleFileButtonClick}
+                disabled={loading || disabled}
+                className="
+                  w-9 h-9 sm:w-8 sm:h-8 text-muted-foreground hover:text-foreground
+                  hover:bg-muted rounded-lg sm:rounded-xl
+                  disabled:opacity-50 disabled:cursor-not-allowed
+                  transition-all duration-200
+                  flex items-center justify-center
+                  shadow-md active:scale-95
+                "
+                title="Subir archivos"
               >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={showButtons ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+                <svg
+                  className="w-5 h-5 sm:w-4 sm:h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+                  />
                 </svg>
               </button>
-
-              {/* Buttons grid - 2 rows, 2 columns */}
-              {showButtons && (
-                <div className="flex flex-col gap-1">
-                  {/* Row 1: New Chat, History */}
-                  <div className="flex gap-1">
-                    <button
-                      onClick={handleNewChat}
-                      className="w-8 h-8 bg-primary text-primary-foreground rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center shadow-lg"
-                      title="Nuevo Chat"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                    </button>
-                    
-                    <div className="relative">
-                      <button
-                        onClick={() => setShowHistory(!showHistory)}
-                        className="w-8 h-8 bg-secondary text-secondary-foreground rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center shadow-lg"
-                        title="Historial"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </button>
-
-                      {/* History dropdown */}
-                      {showHistory && (
-                        <>
-                          {/* Overlay */}
-                          <div
-                            className="fixed inset-0 z-10"
-                            onClick={() => setShowHistory(false)}
-                          />
-                          
-                          {/* Dropdown */}
-                          <div className="absolute bottom-9 left-0 w-80 bg-card border border-border rounded-lg shadow-lg z-30 max-h-96 overflow-y-auto">
-                            <div className="p-3 border-b border-border">
-                              <h3 className="text-sm font-medium text-card-foreground">Chats Anteriores</h3>
-                            </div>
-                            
-                            <div className="p-2">
-                              {loadingChats ? (
-                                <div className="space-y-2">
-                                  {Array.from({ length: 3 }).map((_, i) => (
-                                    <div key={i} className="loading-shimmer h-12 rounded"></div>
-                                  ))}
-                                </div>
-                              ) : chats.length === 0 ? (
-                                <div className="text-center py-6 text-muted-foreground">
-                                  <div className="w-12 h-12 mx-auto mb-3 bg-muted rounded-full flex items-center justify-center">
-                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                    </svg>
-                                  </div>
-                                  <p className="text-sm">No tienes chats aún</p>
-                                </div>
-                              ) : (
-                                <div className="space-y-1">
-                                  {chats.map((chat) => (
-                                    <button
-                                      key={chat.id}
-                                      onClick={() => handleChatClick(chat.id)}
-                                      className="w-full text-left p-3 rounded-md hover:bg-muted transition-colors group"
-                                    >
-                                      <div className="flex items-start justify-between gap-2">
-                                        <div className="flex-1 min-w-0">
-                                          <p className="text-sm font-medium text-card-foreground truncate group-hover:text-primary transition-colors">
-                                            {chat.title}
-                                          </p>
-                                          <p className="text-xs text-muted-foreground mt-1">
-                                            {new Date(chat.updated_at).toLocaleDateString('es-ES', {
-                                              day: 'numeric',
-                                              month: 'short',
-                                              hour: '2-digit',
-                                              minute: '2-digit'
-                                            })}
-                                          </p>
-                                        </div>
-                                        <span className="text-xs px-2 py-1 bg-secondary/20 text-secondary-foreground rounded-full flex-shrink-0">
-                                          {chat.context_type}
-                                        </span>
-                                      </div>
-                                    </button>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* Row 2: Files, Calendar */}
-                  <div className="flex gap-1">
-                    {/* File upload button */}
-                    <button
-                      type="button"
-                      onClick={handleFileButtonClick}
-                      disabled={loading || disabled}
-                      className="
-                        w-8 h-8 text-muted-foreground hover:text-foreground
-                        hover:bg-muted rounded-xl
-                        disabled:opacity-50 disabled:cursor-not-allowed
-                        transition-all duration-200
-                        flex items-center justify-center
-                        shadow-lg
-                      "
-                      title="Subir archivos"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-                        />
-                      </svg>
-                    </button>
-                    
-                    {/* Calendar button with visual bar when in dashboard */}
-                    <div className="relative">
-                      <button
-                        type="button"
-                        onClick={handleCalendarClick}
-                        disabled={loading || disabled}
-                        className="
-                          w-8 h-8 text-muted-foreground hover:text-foreground
-                          hover:bg-muted rounded-xl
-                          disabled:opacity-50 disabled:cursor-not-allowed
-                          transition-all duration-200
-                          flex items-center justify-center
-                          shadow-lg
-                        "
-                        title="Ir al calendario"
-                      >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                          />
-                        </svg>
-                      </button>
-                      
-                      {/* Visual bar when in dashboard */}
-                      {window.location.pathname.startsWith('/dashboard') && (
-                        <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-primary rounded-full"></div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
 
               <form onSubmit={handleSubmit} className="flex-1 flex items-center gap-2">
                 {/* Textarea container */}
@@ -514,21 +320,22 @@ export default function ChatInput({
                     placeholder={placeholder}
                     disabled={loading || disabled}
                     className="
-                      w-full min-h-[52px] max-h-[120px] px-4 py-4
+                      w-full min-h-[40px] sm:min-h-[44px] max-h-[120px] px-3 sm:px-4
                       bg-transparent border-none
                       resize-none overflow-y-auto
                       placeholder:text-muted-foreground
                       focus:outline-none
                       disabled:opacity-50 disabled:cursor-not-allowed
                       transition-all duration-200
-                      text-sm
+                      text-base sm:text-lg
+                      leading-[1.5]
                     "
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      lineHeight: '1.5'
+                      paddingTop: '0.5rem',
+                      paddingBottom: '0.5rem',
+                      verticalAlign: 'middle'
                     }}
-                    rows={2}
+                    rows={1}
                   />
 
                   {/* Hidden file input */}
@@ -548,19 +355,19 @@ export default function ChatInput({
                   type="submit"
                   disabled={!message.trim() || loading || disabled}
                   className="
-                    w-10 h-10 bg-primary text-primary-foreground rounded-2xl
+                    w-10 h-10 sm:w-10 sm:h-10 bg-primary text-primary-foreground rounded-lg sm:rounded-xl
                     hover:opacity-90 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed
                     transition-all duration-200
                     flex items-center justify-center
-                    shadow-sm
+                    shadow-md active:scale-95
                   "
                   title="Enviar mensaje (Enter)"
                 >
                   {loading ? (
-                    <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin"></div>
                   ) : (
                     <svg
-                      className="w-4 h-4"
+                      className="w-5 h-5"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"

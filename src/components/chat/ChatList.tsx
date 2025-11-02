@@ -3,7 +3,7 @@
 import { useChat } from '@/contexts/ChatContext'
 import { format, subDays } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
 interface ChatListProps {
@@ -38,6 +38,7 @@ function ChatListItem({ chat }: ChatListItemProps) {
   const { deleteChat, updateChatTitle } = useChat()
   const router = useRouter()
   const pathname = usePathname()
+  const searchParams = useSearchParams()
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -60,7 +61,21 @@ function ChatListItem({ chat }: ChatListItemProps) {
   }, [isRenaming])
 
   const handleChatClick = () => {
-    router.push(`/foco/${chat.id}`)
+    // Si estamos en dashboard, actualizar la URL con el parámetro chat
+    if (pathname?.startsWith('/dashboard')) {
+      const params = new URLSearchParams(searchParams.toString())
+      params.set('chat', chat.id)
+      router.push(`/dashboard?${params.toString()}`, { scroll: false })
+    } else {
+      // Si estamos en /foco, redirigir normalmente
+      router.push(`/foco/${chat.id}`)
+    }
+    
+    // Cerrar sidebar en móvil después de hacer clic en un chat
+    if (window.innerWidth < 768) {
+      // Disparar evento personalizado para cerrar sidebar
+      window.dispatchEvent(new CustomEvent('closeSidebar'))
+    }
   }
 
   const handleRename = async () => {
@@ -120,18 +135,18 @@ function ChatListItem({ chat }: ChatListItemProps) {
 
   return (
     <div
-      onClick={handleChatClick}
+        onClick={handleChatClick}
       className={`
-        group relative p-3 rounded-lg border cursor-pointer transition-all duration-200
+        group relative p-2 rounded-lg border cursor-pointer transition-all duration-200
         hover:bg-accent hover:border-primary/30
-        ${pathname === `/foco/${chat.id}` 
+        ${pathname === `/foco/${chat.id}` || (pathname?.startsWith('/dashboard') && searchParams.get('chat') === chat.id)
           ? 'bg-primary/10 border-primary shadow-sm' 
           : 'bg-background border-border'
         }
       `}
     >
-      <div className="flex items-start gap-2">
-        <span className="text-primary mt-1 flex-shrink-0">•</span>
+      <div className="flex items-center gap-2">
+        <span className="text-primary flex-shrink-0 text-xs">•</span>
         <div className="flex-1 min-w-0">
           {isRenaming ? (
             <input
@@ -146,10 +161,10 @@ function ChatListItem({ chat }: ChatListItemProps) {
             />
           ) : (
             <>
-              <h3 className="font-medium text-sm text-card-foreground line-clamp-2 leading-tight">
+              <h3 className="font-medium text-sm text-card-foreground line-clamp-1 leading-tight truncate">
                 {chat.title}
               </h3>
-              <p className="text-xs text-muted-foreground mt-1 ml-2">
+              <p className="text-[10px] text-muted-foreground mt-0.5">
                 {format(new Date(chat.updated_at), 'd MMM. HH:mm', { locale: es })}
               </p>
             </>
@@ -160,7 +175,7 @@ function ChatListItem({ chat }: ChatListItemProps) {
       {/* Botón de tres puntos - Solo aparece al hacer hover */}
       <div 
         ref={menuRef}
-        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+        className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -376,7 +391,7 @@ export default function ChatList({ className = '' }: ChatListProps) {
       {groupedChats.map((group, groupIndex) => (
         <div key={group.title} className={groupIndex > 0 ? 'mt-4' : ''}>
           <GroupHeader title={group.title} type={group.type} />
-          <div className="space-y-2 mt-2">
+          <div className="space-y-1.5 mt-1.5">
             {group.chats.map((chat) => (
               <ChatListItem key={chat.id} chat={chat} />
             ))}

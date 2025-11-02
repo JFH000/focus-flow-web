@@ -292,11 +292,57 @@ export default function FocoLayout({
 }: {
   children: React.ReactNode
 }) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+  // Sidebar cerrado por defecto en móvil, abierto en desktop
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false)
   const { clearCurrentChat, chats } = useChat()
   const router = useRouter()
   const pathname = usePathname()
+
+  // Inicializar sidebar según tamaño de pantalla (solo en mount en el cliente)
+  useEffect(() => {
+    const checkScreenSize = () => {
+      if (typeof window === 'undefined') return
+      
+      if (window.innerWidth >= 768) {
+        // En desktop, abrir sidebar por defecto
+        setIsSidebarOpen(true)
+      } else {
+        // En móvil, mantener cerrado
+        setIsSidebarOpen(false)
+      }
+    }
+
+    // Solo ejecutar en el cliente
+    if (typeof window !== 'undefined') {
+      checkScreenSize()
+      window.addEventListener('resize', checkScreenSize)
+      return () => window.removeEventListener('resize', checkScreenSize)
+    }
+  }, [])
+
+  // Cerrar sidebar cuando se cierra el modal en móvil
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    
+    if (!isHistoryModalOpen && window.innerWidth < 768) {
+      setIsSidebarOpen(false)
+    }
+  }, [isHistoryModalOpen])
+
+  // Escuchar evento para cerrar sidebar desde ChatList
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const handleCloseSidebar = () => {
+      if (window.innerWidth < 768) {
+        setIsSidebarOpen(false)
+      }
+    }
+
+    window.addEventListener('closeSidebar', handleCloseSidebar)
+    return () => window.removeEventListener('closeSidebar', handleCloseSidebar)
+  }, [])
 
   // Función mejorada para nuevo chat - enfoque más simple y directo
   const handleNewChat = useCallback(async (e?: React.MouseEvent) => {
@@ -342,33 +388,50 @@ export default function FocoLayout({
   const handleChatClickFromModal = (chatId: string) => {
     router.push(`/foco/${chatId}`)
     closeHistoryModal()
+    // Cerrar sidebar en móvil después de seleccionar un chat
+    if (window.innerWidth < 768) {
+      setIsSidebarOpen(false)
+    }
   }
 
   return (
     <ProtectedRoute>
       <AppLayout>
         <div className="flex h-full bg-background overflow-hidden">
+          {/* Mobile: Overlay cuando sidebar está abierto */}
+          {isSidebarOpen && (
+            <div
+              className="fixed inset-0 bg-black/50 z-40 md:hidden"
+              onClick={() => setIsSidebarOpen(false)}
+            />
+          )}
+
           {/* Sidebar */}
           <aside 
-            className={`flex flex-col border-r bg-card transition-all duration-300 ${
-              isSidebarOpen ? 'w-80' : 'w-16'
-            }`}
+            className={`flex flex-col border-r border-purple-500/20 bg-gradient-to-b from-purple-600/5 via-blue-600/5 to-purple-600/5 backdrop-blur-xl shadow-lg transition-all duration-300 ${
+              isSidebarOpen 
+                ? 'w-64 translate-x-0' 
+                : '-translate-x-full md:translate-x-0'
+            } ${
+              isSidebarOpen ? '' : 'md:w-16'
+            } fixed md:relative left-0 top-0 bottom-0 z-50 md:z-auto`}
           >
             
-            {/* Header del sidebar con botón de toggle - SIMPLIFICADO */}
-            <div className="relative p-4 border-b min-h-[64px] flex items-center justify-center">
-              {isSidebarOpen && (
-                <h2 className="text-lg font-semibold">Chats Anteriores</h2>
-              )}
+            {/* Header del sidebar con botón de toggle - MEJORADO */}
+            <div className="relative border-b border-purple-500/20 min-h-[48px] flex items-center justify-center bg-gradient-to-r from-purple-600/10 via-blue-600/10 to-purple-600/10">
 
-              {/* Botón para colapsar/expandir - SIEMPRE EN LA MISMA POSICIÓN */}
+              {/* Botón para colapsar/expandir - CENTRADO cuando colapsado, MEJORADO */}
               <button
                 onClick={toggleSidebar}
-                className="absolute top-1/2 -translate-y-1/2 right-2 p-2 hover:bg-muted rounded transition-all duration-200"
+                className={`absolute top-1/2 -translate-y-1/2 p-2 hover:bg-gradient-to-r hover:from-purple-600/20 hover:to-blue-600/20 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md ${
+                  isSidebarOpen 
+                    ? 'right-2' 
+                    : 'left-1/2 -translate-x-1/2'
+                }`}
                 title={isSidebarOpen ? 'Colapsar sidebar' : 'Expandir sidebar'}
               >
                 <svg 
-                  className={`w-4 h-4 transition-transform duration-300 ${
+                  className={`w-4 h-4 text-muted-foreground hover:text-purple-600 transition-all duration-300 ${
                     isSidebarOpen ? '' : 'rotate-180'
                   }`} 
                   fill="none" 
@@ -388,14 +451,14 @@ export default function FocoLayout({
             {/* Contenido cuando está expandido */}
             {isSidebarOpen && (
               <>
-                {/* Botón Nuevo Chat */}
-                <div className="p-4 border-b">
+                {/* Opciones principales */}
+                <div className="p-3 space-y-1 border-b border-purple-500/20">
                   <button
                     onClick={handleNewChat}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors duration-200 font-medium"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-foreground hover:bg-gradient-to-r hover:from-purple-600/10 hover:to-blue-600/10 rounded-lg transition-all duration-200"
                   >
                     <svg 
-                      className="w-5 h-5" 
+                      className="w-4 h-4" 
                       fill="none" 
                       stroke="currentColor" 
                       viewBox="0 0 24 24"
@@ -407,28 +470,53 @@ export default function FocoLayout({
                         d="M12 4v16m8-8H4" 
                       />
                     </svg>
-                    Nuevo Chat
+                    <span>Nuevo Chat</span>
+                  </button>
+                  
+                  <button
+                    onClick={openHistoryModal}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-foreground hover:bg-gradient-to-r hover:from-purple-600/10 hover:to-blue-600/10 rounded-lg transition-all duration-200"
+                  >
+                    <svg 
+                      className="w-4 h-4" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" 
+                      />
+                    </svg>
+                    <span>Buscar Chat</span>
                   </button>
                 </div>
 
                 {/* Lista de chats */}
                 <div className="flex-1 overflow-y-auto">
+                  <div className="px-4 pt-4 pb-2">
+                    <h2 className="text-base font-semibold bg-gradient-to-r from-purple-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">
+                      Chats
+                    </h2>
+                  </div>
                   <ChatList className="p-2" />
                 </div>
               </>
             )}
 
-            {/* Contenido cuando está colapsado - SOLO 2 BOTONES */}
+            {/* Contenido cuando está colapsado - SOLO 2 BOTONES MEJORADOS */}
             {!isSidebarOpen && (
               <div className="flex-1 flex flex-col items-center pt-8 space-y-6">
                 {/* Botón Nuevo Chat */}
                 <button
                   onClick={handleNewChat}
-                  className="p-3 text-muted-foreground hover:bg-primary/10 hover:text-primary rounded-lg transition-colors duration-200"
+                  className="p-3 text-muted-foreground hover:text-white hover:bg-gradient-to-br hover:from-purple-600 hover:to-blue-600 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg active:scale-95 group"
                   title="Nuevo Chat"
                 >
                   <svg 
-                    className="w-6 h-6" 
+                    className="w-6 h-6 group-hover:scale-110 transition-transform duration-200" 
                     fill="none" 
                     stroke="currentColor" 
                     viewBox="0 0 24 24"
@@ -442,17 +530,17 @@ export default function FocoLayout({
                   </svg>
                 </button>
 
-                {/* Separador */}
-                <div className="w-8 h-px bg-border"></div>
+                {/* Separador con gradiente */}
+                <div className="w-8 h-px bg-gradient-to-r from-transparent via-purple-500/50 to-transparent"></div>
 
                 {/* Botón Buscar Chat (Historial) */}
                 <button
                   onClick={openHistoryModal}
-                  className="p-3 text-muted-foreground hover:bg-primary/10 hover:text-primary rounded-lg transition-colors duration-200"
+                  className="p-3 text-muted-foreground hover:text-white hover:bg-gradient-to-br hover:from-purple-600 hover:to-blue-600 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg active:scale-95 group"
                   title="Buscar Chat"
                 >
                   <svg 
-                    className="w-6 h-6" 
+                    className="w-6 h-6 group-hover:scale-110 transition-transform duration-200" 
                     fill="none" 
                     stroke="currentColor" 
                     viewBox="0 0 24 24"
@@ -468,34 +556,32 @@ export default function FocoLayout({
               </div>
             )}
 
-            {/* Footer del sidebar solo cuando está expandido */}
-            {isSidebarOpen && (
-              <div className="p-4 border-t">
-                <button
-                  onClick={openHistoryModal}
-                  className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:bg-muted rounded-lg transition-colors duration-200"
-                >
-                  <svg 
-                    className="w-4 h-4" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth={2} 
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" 
-                    />
-                  </svg>
-                  Buscar Chat
-                </button>
-              </div>
-            )}
           </aside>
 
           {/* Área principal del chat */}
-          <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          <main className="flex-1 flex flex-col min-h-0 overflow-hidden md:ml-0">
+            {/* Mobile: Botón para abrir sidebar - MEJORADO */}
+            <div className="md:hidden fixed top-14 left-3 z-30">
+              <button
+                onClick={toggleSidebar}
+                className="p-2.5 bg-gradient-to-r from-purple-600/10 via-blue-600/10 to-purple-600/10 backdrop-blur-xl border border-purple-500/20 rounded-lg shadow-lg hover:from-purple-600/20 hover:to-blue-600/20 hover:border-purple-500/40 transition-all duration-200 active:scale-95"
+                title="Abrir menú de chats"
+              >
+                <svg 
+                  className="w-5 h-5 text-purple-600" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path 
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d={isSidebarOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} 
+                  />
+                </svg>
+              </button>
+            </div>
             {children}
           </main>
 

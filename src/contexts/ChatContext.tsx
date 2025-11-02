@@ -273,12 +273,99 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           const reader = response.body.getReader()
           const decoder = new TextDecoder()
           let buffer = ''
+          let characterQueue: string[] = []
+          let isProcessing = false
+          let thinkingMessageShown = false
+          const chunkSize = 5 // caracteres a mostrar a la vez
+          const chunkDelay = 5 // ms entre cada grupo de caracteres (más rápido)
+
+          // Mostrar mensaje de "pensando" inicialmente
+          const showThinkingMessage = () => {
+            if (!thinkingMessageShown) {
+              thinkingMessageShown = true
+              const thinkingMessage: Message = {
+                id: 'streaming',
+                chat_id: targetChatId,
+                user_id: user.id,
+                role: 'assistant',
+                content: 'thinking', // Marcador especial para el componente
+                model_used: 'n8n-ai',
+                token_count: null,
+                attached_files: [],
+                created_at: new Date().toISOString()
+              }
+              setMessages(prev => [...prev, thinkingMessage])
+            }
+          }
+
+          // Función para mostrar el siguiente grupo de caracteres
+          const processNextChunk = () => {
+            if (characterQueue.length === 0) {
+              isProcessing = false
+              return
+            }
+
+            // Tomar un grupo de caracteres
+            const chunk = characterQueue.splice(0, chunkSize).join('')
+            aiContent += chunk
+
+            setMessages(prev => {
+              const lastMessage = prev[prev.length - 1]
+              if (lastMessage && lastMessage.role === 'assistant' && lastMessage.id === 'streaming') {
+                // Si el mensaje anterior era "thinking", reemplazarlo con contenido real
+                if (lastMessage.content === 'thinking') {
+                  return [...prev.slice(0, -1), { ...lastMessage, content: aiContent }]
+                }
+                return [...prev.slice(0, -1), { ...lastMessage, content: aiContent }]
+              } else {
+                const streamingMessage: Message = {
+                  id: 'streaming',
+                  chat_id: targetChatId,
+                  user_id: user.id,
+                  role: 'assistant',
+                  content: aiContent,
+                  model_used: 'n8n-ai',
+                  token_count: null,
+                  attached_files: [],
+                  created_at: new Date().toISOString()
+                }
+                return [...prev, streamingMessage]
+              }
+            })
+
+            // Programar el siguiente grupo
+            setTimeout(() => {
+              processNextChunk()
+            }, chunkDelay)
+          }
+
+          // Función para agregar caracteres a la cola
+          const addCharacters = (text: string) => {
+            for (const char of text) {
+              characterQueue.push(char)
+            }
+            
+            // Iniciar el procesamiento si no está en curso
+            if (!isProcessing) {
+              isProcessing = true
+              processNextChunk()
+            }
+          }
 
           try {
+            // Mostrar mensaje de "pensando" inmediatamente
+            showThinkingMessage()
+
             while (true) {
               const { done, value } = await reader.read()
 
-              if (done) break
+              if (done) {
+                // Esperar a que todos los caracteres se procesen
+                while (characterQueue.length > 0) {
+                  await new Promise(resolve => setTimeout(resolve, chunkDelay))
+                }
+                break
+              }
 
               const chunk = decoder.decode(value, { stream: true })
               buffer += chunk
@@ -292,27 +379,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
                 try {
                   const eventObj = JSON.parse(trimmed) as { type?: string; content?: string }
                   if (eventObj.type === 'item' && typeof eventObj.content === 'string') {
-                    aiContent += eventObj.content
-
-                    setMessages(prev => {
-                      const lastMessage = prev[prev.length - 1]
-                      if (lastMessage && lastMessage.role === 'assistant' && lastMessage.id === 'streaming') {
-                        return [...prev.slice(0, -1), { ...lastMessage, content: aiContent }]
-                      } else {
-                        const streamingMessage: Message = {
-                          id: 'streaming',
-                          chat_id: targetChatId,
-                          user_id: user.id,
-                          role: 'assistant',
-                          content: aiContent,
-                          model_used: 'n8n-ai',
-                          token_count: null,
-                          attached_files: [],
-                          created_at: new Date().toISOString()
-                        }
-                        return [...prev, streamingMessage]
-                      }
-                    })
+                    addCharacters(eventObj.content)
                   }
                 } catch {
                   // Skip invalid JSON lines

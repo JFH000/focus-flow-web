@@ -81,13 +81,13 @@ function EventDetailsModal({ isOpen, onClose, event, onEdit, onDelete, onColorCh
   const endDate = new Date(event.end_time)
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="bg-background rounded-lg shadow-xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
-        <div className="p-6">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3 md:p-4" onClick={onClose}>
+      <div className="bg-background rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="p-4 md:p-6">
           {/* Header con color del evento */}
-          <div className="h-2 w-full rounded-t-lg -mx-6 -mt-6 mb-4" style={{ background: getEventColor(event) }} />
+          <div className="h-2 w-full rounded-t-lg -mx-4 md:-mx-6 -mt-4 md:-mt-6 mb-4" style={{ background: getEventColor(event) }} />
 
-          <h2 className="text-2xl font-bold mb-4 text-foreground">{event.title}</h2>
+          <h2 className="text-xl md:text-2xl font-bold mb-4 text-foreground">{event.title}</h2>
 
           <div className="space-y-3">
             {/* Fecha y hora */}
@@ -351,10 +351,10 @@ function CreateEventModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-background rounded-lg shadow-xl w-full max-w-md">
-        <div className="p-6">
-          <h2 className="text-xl font-semibold mb-4">{editingEvent ? "Editar Evento" : "Crear Evento"}</h2>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3 md:p-4">
+      <div className="bg-background rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="p-4 md:p-6">
+          <h2 className="text-lg md:text-xl font-semibold mb-4">{editingEvent ? "Editar Evento" : "Crear Evento"}</h2>
 
           {error && (
             <div className="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded-md text-sm">{error}</div>
@@ -964,61 +964,151 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
     return map
   }, [events, start])
 
+  // Vista móvil: eventos en lista
+  const mobileEventsList = useMemo(() => {
+    const days = Array.from({ length: 7 }, (_, i) => addDays(start, i))
+    return days.map((day) => {
+      const key = format(day, "yyyy-MM-dd")
+      const dayEvents = (eventsByDay.get(key) || []).sort(
+        (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+      )
+      return { day, events: dayEvents }
+    })
+  }, [eventsByDay, start])
+
   const calendarContent = (
     <div
-      className={`calendar-container ${isDashboard ? "h-full flex flex-col bg-background" : "h-screen flex flex-col bg-background"}`}
+      className={`calendar-container ${isDashboard ? "h-full flex flex-col bg-background overflow-hidden" : "h-full flex flex-col bg-background overflow-hidden"}`}
     >
       {(isUpdating || isSyncing || syncMessage) && (
-        <div className="px-6 py-2 bg-primary/10 text-primary text-sm text-center">
-          {isUpdating && "🔄 Actualizando desde la base de datos..."}
-          {isSyncing && "🔄 Sincronizando con Google Calendar..."}
+        <div className="px-3 md:px-6 py-2 bg-primary/10 text-primary text-xs md:text-sm text-center">
+          {isUpdating && "🔄 Actualizando..."}
+          {isSyncing && "🔄 Sincronizando..."}
           {syncMessage && `✅ ${syncMessage}`}
         </div>
       )}
 
-      <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:backdrop-blur sticky top-12 z-40">
-        <div className="flex items-center gap-2">
-          <button
-            className="p-2 border border-border rounded-md hover:bg-muted transition-colors"
-            onClick={() => setAnchor(addDays(anchor, -7))}
-            title="Semana anterior"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <button
-            className="p-2 border border-border rounded-md hover:bg-muted transition-colors"
-            onClick={() => setAnchor(addDays(anchor, 7))}
-            title="Semana siguiente"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-          <button
-            className="p-2 border border-border rounded-md hover:bg-muted transition-colors"
-            onClick={() => setAnchor(startOfDay(new Date()))}
-            title="Ir a hoy"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-          </button>
+      {/* Header Responsive */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between px-3 md:px-6 py-3 md:py-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:backdrop-blur sticky top-0 z-40 gap-3 md:gap-0">
+        {/* Primera fila: Navegación y título en móvil */}
+        <div className="flex items-center justify-between md:justify-start gap-2">
+          <div className="flex items-center gap-1 md:gap-2">
+            <button
+              className="p-1.5 md:p-2 border border-border rounded-md hover:bg-muted transition-colors"
+              onClick={() => setAnchor(addDays(anchor, -7))}
+              title="Semana anterior"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button
+              className="p-1.5 md:p-2 border border-border rounded-md hover:bg-muted transition-colors"
+              onClick={() => setAnchor(addDays(anchor, 7))}
+              title="Semana siguiente"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+            <button
+              className="p-1.5 md:p-2 border border-border rounded-md hover:bg-muted transition-colors"
+              onClick={() => setAnchor(startOfDay(new Date()))}
+              title="Ir a hoy"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+            </button>
+          </div>
+
+          {/* Título - Responsive */}
+          <div className="text-center md:hidden">
+            <h1 className="text-sm font-semibold">
+              {format(start, "d MMM", { locale: es })} – {format(end, "d MMM", { locale: es })}
+            </h1>
+          </div>
+
+          {/* Botones de acción en móvil - Menú compacto */}
+          <div className="flex items-center gap-1 md:hidden">
+            {!hasCalendarAccess ? (
+              <button
+                onClick={connectGoogleCalendar}
+                disabled={authLoading}
+                className="p-2 rounded-md bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 disabled:opacity-50 transition-all duration-200"
+                title="Conectar Google Calendar"
+              >
+                {authLoading ? (
+                  <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                )}
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={handleUpdateFromDB}
+                  disabled={isUpdating}
+                  className="p-1.5 rounded-md bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 transition-colors"
+                  title="Actualizar BD"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
+                </button>
+                <button
+                  onClick={handleSyncWithGoogle}
+                  disabled={isSyncing}
+                  className="p-1.5 rounded-md bg-green-500 text-white hover:bg-green-600 disabled:opacity-50 transition-colors"
+                  title="Sincronizar Google"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 12a9 9 0 11-16 0 9 9 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                    />
+                  </svg>
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
-        <div className="text-center">
+        {/* Título Desktop */}
+        <div className="hidden md:block text-center">
           <h1 className="text-lg font-semibold">
             {format(start, "d 'de' MMM", { locale: es })} – {format(end, "d 'de' MMM, yyyy", { locale: es })}
           </h1>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Botones de acción Desktop */}
+        <div className="hidden md:flex items-center gap-2">
           {!hasCalendarAccess && (
             <button
               onClick={connectGoogleCalendar}
@@ -1050,7 +1140,7 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
           )}
 
           {hasCalendarAccess && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-green-100 text-green-800 border border-green-200">
+            <div className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-md bg-green-100 text-green-800 border border-green-200">
               <div className="w-2 h-2 rounded-full bg-green-500"></div>
               <span className="text-sm font-medium">Google Calendar Conectado</span>
             </div>
@@ -1133,10 +1223,10 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
       )}
 
       {!hasCalendarAccess && (
-        <div className="px-6 py-4 bg-blue-50 border-l-4 border-blue-400 text-blue-800">
+        <div className="px-3 md:px-6 py-3 md:py-4 bg-blue-50 border-l-4 border-blue-400 text-blue-800">
           <div className="flex items-start">
             <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="h-4 w-4 md:h-5 md:w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
                 <path
                   fillRule="evenodd"
                   d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
@@ -1144,20 +1234,136 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
                 />
               </svg>
             </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-blue-800">Conecta tu Google Calendar</h3>
-              <div className="mt-1 text-sm text-blue-700">
-                <p>
+            <div className="ml-2 md:ml-3">
+              <h3 className="text-xs md:text-sm font-medium text-blue-800">Conecta tu Google Calendar</h3>
+              <div className="mt-1 text-xs md:text-sm text-blue-700">
+                <p className="hidden md:block">
                   Para sincronizar tus eventos con Google Calendar, necesitas conectar tu cuenta. Haz clic en el botón
                   &quot;Conectar Google Calendar&quot; en la parte superior.
                 </p>
+                <p className="md:hidden">Conecta tu cuenta para sincronizar eventos.</p>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      <div className="flex-1 flex flex-col min-h-0">
+      {/* Vista Móvil: Lista de eventos */}
+      <div className="flex-1 flex flex-col min-h-0 md:hidden overflow-y-auto">
+        {mobileEventsList.map(({ day, events }) => {
+          const key = format(day, "yyyy-MM-dd")
+          const isDayToday = isToday(day)
+          
+          return (
+            <div key={key} className="border-b border-border last:border-b-0">
+              {/* Header del día */}
+              <div className={`sticky top-0 z-10 px-4 py-2 ${isDayToday ? "bg-primary/10" : "bg-muted/50"} border-b border-border`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className={`text-sm font-semibold ${isDayToday ? "text-primary" : "text-foreground"}`}>
+                      {format(day, "EEEE", { locale: es })}
+                    </div>
+                    <div className={`text-xs ${isDayToday ? "text-primary" : "text-muted-foreground"}`}>
+                      {format(day, "d 'de' MMM", { locale: es })}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const now = new Date()
+                      setSelectedDate(day)
+                      setSelectedTime(format(now, "HH:mm"))
+                      setShowCreateModal(true)
+                    }}
+                    className="p-1.5 rounded-lg bg-gradient-to-r from-purple-600/10 via-blue-600/10 to-purple-600/10 hover:from-purple-600/20 hover:via-blue-600/20 hover:to-purple-600/20 text-purple-600 border border-purple-500/20 hover:border-purple-500/40 transition-all duration-200 shadow-sm hover:shadow-md"
+                    title="Agregar evento"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Lista de eventos del día */}
+              {events.length === 0 ? (
+                <div className="px-4 py-8 text-center text-sm text-muted-foreground">
+                  No hay eventos programados
+                </div>
+              ) : (
+                <div className="divide-y divide-border">
+                  {events.map((ev) => {
+                    const startDate = new Date(ev.start_time)
+                    const endDate = new Date(ev.end_time)
+                    const eventColor = getEventColor(ev)
+
+                    return (
+                      <button
+                        key={ev.id}
+                        onClick={() => setSelectedEvent(ev)}
+                        className="w-full px-4 py-3 text-left hover:bg-muted/50 transition-colors active:bg-muted"
+                      >
+                        <div className="flex items-start gap-3">
+                          {/* Barra de color */}
+                          <div
+                            className="w-1 h-full min-h-[3rem] rounded-full flex-shrink-0"
+                            style={{ backgroundColor: eventColor }}
+                          />
+                          
+                          {/* Contenido del evento */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                              <h3 className="font-semibold text-foreground text-sm truncate">{ev.title}</h3>
+                            </div>
+                            <div className="mt-1 space-y-1">
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                  />
+                                </svg>
+                                <span>
+                                  {ev.all_day
+                                    ? "Todo el día"
+                                    : `${format(startDate, "HH:mm", { locale: es })} – ${format(endDate, "HH:mm", { locale: es })}`}
+                                </span>
+                              </div>
+                              {ev.location && (
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                  <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                                    />
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                                    />
+                                  </svg>
+                                  <span className="truncate">{ev.location}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Vista Desktop: Calendario semanal */}
+      <div className="hidden md:flex flex-1 flex-col min-h-0">
         <div className="grid grid-cols-8 border-b border-border bg-background sticky top-[3rem] z-30">
           <div className="border-r border-border px-2 py-2 text-xs text-muted-foreground font-medium">Hora</div>
           {Array.from({ length: 7 }, (_, i) => addDays(start, i)).map((d) => (
@@ -1173,7 +1379,7 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
           ))}
         </div>
 
-        <div className="flex-1 grid grid-cols-8 min-h-0">
+        <div className="flex-1 grid grid-cols-8 min-h-0 overflow-y-auto">
           <div className="border-r border-border text-xs text-muted-foreground bg-muted/30">
             {Array.from({ length: 24 }, (_, h) => (
               <div key={h} className="h-16 border-b border-border/60 px-2 relative flex items-start">
@@ -1294,11 +1500,11 @@ export default function CalendarPage({ isDashboard = false }: CalendarPageProps 
           setSelectedTime(format(new Date(), "HH:mm"))
           setShowCreateModal(true)
         }}
-        className="fixed bottom-8 right-8 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-2xl hover:shadow-3xl hover:scale-110 transition-all duration-300 flex items-center justify-center z-50 group"
+        className="fixed bottom-4 right-4 md:bottom-8 md:right-8 w-12 h-12 md:w-14 md:h-14 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300 flex items-center justify-center z-50 group border border-purple-500/30 hover:border-purple-500/50 backdrop-blur-sm"
         title="Crear nuevo evento"
       >
         <svg
-          className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300"
+          className="w-5 h-5 md:w-6 md:h-6 group-hover:rotate-90 transition-transform duration-300"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"

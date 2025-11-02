@@ -33,11 +33,12 @@ export default function AppLayout({ children, showNavbar = true }: AppLayoutProp
   }
 
   const isDashboardPage = pathname.startsWith('/dashboard')
+  const isCalendarPage = pathname.startsWith('/calendar')
   
   return (
-    <div className={isDashboardPage ? 'h-screen bg-background overflow-hidden' : 'min-h-screen bg-background'}>
+    <div className={isDashboardPage || isCalendarPage ? 'h-screen bg-background overflow-hidden' : 'min-h-screen bg-background'}>
       {showNavbar && <Navbar />}
-      <main className={isChatPage ? 'h-screen pt-12' : isDashboardPage ? 'h-screen pt-12 overflow-hidden' : showNavbar ? 'pt-12' : ''}>
+      <main className={isChatPage ? 'h-screen pt-12' : isDashboardPage || isCalendarPage ? 'h-screen pt-12 overflow-hidden' : showNavbar ? 'pt-12' : ''}>
         {children}
       </main>
     </div>
