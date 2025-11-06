@@ -387,9 +387,10 @@ export type Reminder = Database['calendar']['Tables']['reminders']['Row']
 export type ReminderInsert = Database['calendar']['Tables']['reminders']['Insert']
 export type ReminderUpdate = Database['calendar']['Tables']['reminders']['Update']
 
-export type ConnectedAccount = Database['public']['Tables']['connected_accounts']['Row']
-export type ConnectedAccountInsert = Database['public']['Tables']['connected_accounts']['Insert']
-export type ConnectedAccountUpdate = Database['public']['Tables']['connected_accounts']['Update']
+// TODO: Uncomment when connected_accounts table is added to database
+// export type ConnectedAccount = Database['public']['Tables']['connected_accounts']['Row']
+// export type ConnectedAccountInsert = Database['public']['Tables']['connected_accounts']['Insert']
+// export type ConnectedAccountUpdate = Database['public']['Tables']['connected_accounts']['Update']
 
 export interface ChatWithMessages extends Chat {
   messages: Message[]
