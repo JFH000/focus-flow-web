@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext"
 import { useTheme } from "@/contexts/ThemeContext"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 interface NavbarProps {
   className?: string
@@ -26,6 +26,20 @@ export default function Navbar({ className = "" }: NavbarProps) {
   const handleThemeChange = (newTheme: "light" | "dark" | "system") => {
     setTheme(newTheme)
   }
+
+  // Cerrar menú con Escape
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showUserMenu) {
+        setShowUserMenu(false)
+      }
+    }
+
+    if (showUserMenu) {
+      document.addEventListener('keydown', handleEscape)
+      return () => document.removeEventListener('keydown', handleEscape)
+    }
+  }, [showUserMenu])
 
   return (
     <nav
@@ -194,11 +208,15 @@ export default function Navbar({ className = "" }: NavbarProps) {
               {/* Dropdown menu */}
               {showUserMenu && (
                 <>
-                  {/* Overlay */}
-                  <div className="fixed inset-0 z-10" onClick={() => setShowUserMenu(false)} />
+                  {/* Overlay para cerrar al hacer click fuera */}
+                  <div 
+                    className="fixed inset-0 z-40" 
+                    onClick={() => setShowUserMenu(false)}
+                    aria-hidden="true"
+                  />
 
                   {/* Menu */}
-                  <div className="absolute right-0 mt-3 w-72 bg-card/98 backdrop-blur-xl border border-purple-500/20 rounded-2xl shadow-2xl shadow-purple-500/10 z-20 overflow-hidden">
+                  <div className="absolute right-0 mt-3 w-72 bg-card/98 backdrop-blur-xl border border-purple-500/20 rounded-2xl shadow-2xl shadow-purple-500/10 z-50 overflow-hidden">
                     {/* User info header */}
                     <div className="p-5 bg-gradient-to-br from-purple-600/10 to-blue-600/10 border-b border-purple-500/20">
                       <div className="flex items-center space-x-3">
