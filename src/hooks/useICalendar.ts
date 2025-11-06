@@ -232,6 +232,7 @@ export function useICalendar(): UseICalendarReturn {
         .filter((event) => event.start && event.summary) // Solo eventos válidos
         .map((event) => ({
           calendar_id: calendarId,
+          user_id: calendar.owner_id,  // Referencia directa al usuario
           title: event.summary || "Sin título",
           description: event.description || null,
           location: event.location || null,

@@ -243,10 +243,48 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
       if (webhookUrl) {
         try {
+          // Obtener o crear calendario principal para el usuario
+          let primaryCalendarId: string | null = null
+          
+          // Buscar calendario principal
+          const { data: calendars } = await supabase
+            .from('calendar_calendars')
+            .select('id, is_primary')
+            .eq('owner_id', user.id)
+            .order('is_primary', { ascending: false })
+            .limit(1)
+          
+          if (calendars && calendars.length > 0) {
+            primaryCalendarId = calendars[0].id
+          } else {
+            // Si no tiene calendarios, crear uno llamado "new"
+            console.log('📅 Usuario sin calendarios, creando calendario "new"...')
+            const { data: newCalendar, error: calendarError } = await supabase
+              .from('calendar_calendars')
+              .insert({
+                owner_id: user.id,
+                name: 'new',
+                color: '#3b82f6',
+                is_primary: true,
+                is_visible: true,
+                is_favorite: false
+              })
+              .select()
+              .single()
+            
+            if (!calendarError && newCalendar) {
+              primaryCalendarId = newCalendar.id
+              console.log(`✅ Calendario "new" creado: ${primaryCalendarId}`)
+            } else {
+              console.error('❌ Error creando calendario:', calendarError)
+            }
+          }
+          
           const requestBody = {
             message: content,
             chat_id: targetChatId,
-            client_id: user.id
+            client_id: user.id,
+            calendar_id: primaryCalendarId
           }
           
           console.log('Enviando POST al webhook de chat:', {

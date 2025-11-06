@@ -380,6 +380,7 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
       // Insertar nuevos eventos
       const eventsToInsert: CalendarEventInsert[] = events.map((event: any) => ({
         calendar_id: calendarId,
+        user_id: user.id,  // Referencia directa al usuario
         title: event.summary || "Sin título",
         description: event.description || null,
         location: event.location || null,

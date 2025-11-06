@@ -69,7 +69,42 @@ Ejecuta estos scripts **EN ORDEN** en el SQL Editor de Supabase.
 
 ## 🔄 Funcionalidades Adicionales (Muy Recomendado)
 
-### Script 3: Habilitar Supabase Realtime
+### Script 3: Agregar user_id a Eventos
+**Archivo**: `sql/add_user_id_to_events.sql`
+
+**Qué hace:**
+- ✅ Agrega columna `user_id` a `calendar_events`
+- ✅ Popula `user_id` desde `calendar_calendars` (para eventos existentes)
+- ✅ Crea índices para mejorar rendimiento
+- ✅ Actualiza políticas RLS para usar `user_id` directamente
+
+**Cuándo ejecutar:**
+- Después de ejecutar `migrate_to_public_fixed.sql` y `add_ics_calendar_support.sql`
+- **RECOMENDADO** para queries más eficientes y mejor RLS
+
+**Ejecutar:**
+```sql
+-- Copia y pega TODO el contenido de sql/add_user_id_to_events.sql
+```
+
+**Resultado esperado:**
+```
+✅ Columna user_id agregada a calendar_events
+📋 Beneficios:
+   - Consultas más rápidas (índice directo por user_id)
+   - RLS más eficiente (sin JOIN)
+   - Funciones helper para queries complejas
+```
+
+**Beneficios:**
+- ✅ Queries más rápidas sin JOIN
+- ✅ RLS más eficiente
+- ✅ Facilita integración con n8n
+- ✅ Funciones helper SQL incluidas
+
+---
+
+### Script 4: Habilitar Supabase Realtime
 **Archivo**: `sql/enable_realtime.sql`
 
 **Qué hace:**
@@ -102,7 +137,7 @@ Ejecuta estos scripts **EN ORDEN** en el SQL Editor de Supabase.
 
 ## 🔧 Si Hay Errores
 
-### Script 4: Arreglar Constraint (Si hay problemas con duplicados)
+### Script 5: Arreglar Constraint (Si hay problemas con duplicados)
 **Archivo**: `sql/add_constraint_for_multiple_calendars.sql`
 
 **Cuándo ejecutar:**
@@ -116,7 +151,7 @@ Ejecuta estos scripts **EN ORDEN** en el SQL Editor de Supabase.
 
 ---
 
-### Script 5: Arreglar Permisos (Si hay errores de RLS)
+### Script 6: Arreglar Permisos (Si hay errores de RLS)
 **Archivo**: `sql/fix_permissions.sql`
 
 **Cuándo ejecutar:**
@@ -132,7 +167,7 @@ Ejecuta estos scripts **EN ORDEN** en el SQL Editor de Supabase.
 
 ## 🔍 Verificación
 
-### Script 6: Verificar Estado
+### Script 7: Verificar Estado
 **Archivo**: `sql/verify_schema.sql`
 
 **Cuándo ejecutar:**
@@ -146,7 +181,7 @@ Ejecuta estos scripts **EN ORDEN** en el SQL Editor de Supabase.
 
 ---
 
-### Script 7: Test de Inserción Manual
+### Script 8: Test de Inserción Manual
 **Archivo**: `sql/test_calendar_insert.sql`
 
 **Cuándo ejecutar:**
@@ -166,7 +201,8 @@ Ejecuta estos scripts **EN ORDEN** en el SQL Editor de Supabase.
 |---------|-----------|-------------------|
 | `migrate_to_public_fixed.sql` | **PRINCIPAL** - Crear todo | **SIEMPRE (primero)** |
 | `add_ics_calendar_support.sql` | **RECOMENDADO** - Calendarios ICS | Después del principal |
-| `enable_realtime.sql` | **MUY RECOMENDADO** - Actualización en tiempo real | Después de ICS |
+| `add_user_id_to_events.sql` | **RECOMENDADO** - user_id en eventos | Después de ICS |
+| `enable_realtime.sql` | **MUY RECOMENDADO** - Actualización en tiempo real | Después de user_id |
 | `add_constraint_for_multiple_calendars.sql` | Fix constraint único | Si hay errores de duplicados |
 | `fix_permissions.sql` | Fix políticas RLS | Si hay errores de permisos |
 | `verify_schema.sql` | Verificar estado | Para debugging |
@@ -206,23 +242,20 @@ Si estás empezando desde cero:
 - ✅ Importar Google Calendar públicos
 - ✅ Sincronización automática
 
-### Opción C: Instalación Completa (3 scripts) 🌟 **MEJOR EXPERIENCIA**
+### Opción C: Instalación Completa (4 scripts) 🌟 **MEJOR EXPERIENCIA**
 ```sql
 -- PASO 1: Ejecutar migrate_to_public_fixed.sql
 -- PASO 2: Ejecutar add_ics_calendar_support.sql
--- PASO 3: Ejecutar enable_realtime.sql
--- 1. Abrir sql/enable_realtime.sql
--- 2. Copiar TODO el contenido
--- 3. Pegar en SQL Editor
--- 4. Click en Run
--- 5. ¡Perfecto! Actualizaciones en tiempo real habilitadas
+-- PASO 3: Ejecutar add_user_id_to_events.sql
+-- PASO 4: Ejecutar enable_realtime.sql
 ```
 
-**Con Realtime además obtienes:**
+**Con todo instalado obtienes:**
+- ✅ Calendarios ICS (Bloque Neón, etc.)
+- ✅ user_id directo en eventos (queries más rápidas)
 - ✅ Cambios instantáneos sin recargar
 - ✅ Sincronización multi-dispositivo
-- ✅ Mejor experiencia de usuario
-- ✅ El contador de calendarios se actualiza al instante
+- ✅ Integración completa con n8n
 
 ---
 

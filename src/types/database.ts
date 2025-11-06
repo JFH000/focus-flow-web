@@ -262,6 +262,7 @@ export interface Database {
         Row: {
           id: string
           calendar_id: string
+          user_id: string
           title: string
           description: string | null
           location: string | null
@@ -278,6 +279,7 @@ export interface Database {
         Insert: {
           id?: string
           calendar_id: string
+          user_id: string
           title: string
           description?: string | null
           location?: string | null
@@ -294,6 +296,7 @@ export interface Database {
         Update: {
           id?: string
           calendar_id?: string
+          user_id?: string
           title?: string
           description?: string | null
           location?: string | null
