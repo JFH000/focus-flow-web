@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client"
 import type { CalendarEvent as DBCalendarEvent } from "@/types/database"
 import { addDays, endOfWeek, format, isSameDay, startOfDay, startOfWeek } from "date-fns"
 import { es } from "date-fns/locale"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState, useRef } from "react"
 import { useAuth } from "@/contexts/AuthContext"
 import AppLayout from "../AppLayout"
 import ProtectedRoute from "../ProtectedRoute"
@@ -537,6 +537,9 @@ export default function CalendarPageV2({ isDashboard = false }: CalendarPageProp
   const [syncMessage, setSyncMessage] = useState<string | null>(null)
   const [hasCalendarAccess, setHasCalendarAccess] = useState(false)
   const [showSyncMenu, setShowSyncMenu] = useState(false)
+  
+  // Ref para prevenir re-renders infinitos
+  const isFetchingRef = useRef(false)
 
   // Verificar acceso a Google Calendar (no bloqueante)
   useEffect(() => {
@@ -572,7 +575,15 @@ export default function CalendarPageV2({ isDashboard = false }: CalendarPageProp
 
   // Obtener eventos de los calendarios visibles
   const fetchEvents = useCallback(async () => {
+    // Prevenir llamadas concurrentes
+    if (isFetchingRef.current) {
+      console.log('⏭️ Fetch ya en progreso, saltando...')
+      return
+    }
+    
+    isFetchingRef.current = true
     setLoading(true)
+    
     try {
       const supabase = createClient()
       const {
@@ -581,7 +592,6 @@ export default function CalendarPageV2({ isDashboard = false }: CalendarPageProp
 
       if (!user) {
         setEvents([])
-        setLoading(false)
         return
       }
 
@@ -594,7 +604,6 @@ export default function CalendarPageV2({ isDashboard = false }: CalendarPageProp
 
       if (!userCalendars || userCalendars.length === 0) {
         setEvents([])
-        setLoading(false)
         return
       }
 
@@ -645,6 +654,7 @@ export default function CalendarPageV2({ isDashboard = false }: CalendarPageProp
       console.error("Error in fetchEvents:", error)
     } finally {
       setLoading(false)
+      isFetchingRef.current = false
     }
   }, [start, end])
 
