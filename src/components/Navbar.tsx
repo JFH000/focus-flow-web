@@ -167,18 +167,19 @@ export default function Navbar({ className = "" }: NavbarProps) {
                 className="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-600/10 to-blue-600/10 hover:from-purple-600/20 hover:to-blue-600/20 border border-purple-500/20 hover:border-purple-500/40 transition-all duration-300 group"
               >
                 {/* Profile picture */}
-                <div className="relative w-6 h-6 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 p-[1px] group-hover:scale-105 transition-transform">
-                  <div className="w-full h-full rounded-full bg-background flex items-center justify-center overflow-hidden">
+                <div className="relative flex h-6 w-6 shrink-0 items-center justify-center transition-transform group-hover:scale-105">
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-600 to-blue-600" />
+                  <div className="absolute inset-[1.5px] flex items-center justify-center overflow-hidden rounded-full bg-background">
                     {user?.user_metadata?.avatar_url ? (
                       <Image
-                        src={user.user_metadata.avatar_url || "/placeholder.svg"}
-                        alt="Profile"
-                        width={24}
-                        height={24}
-                        className="w-full h-full object-cover"
+                        src={user.user_metadata.avatar_url}
+                        alt="Foto de perfil"
+                        fill
+                        sizes="24px"
+                        className="object-cover"
                       />
                     ) : (
-                      <svg className="w-4 h-4 text-purple-600" fill="currentColor" viewBox="0 0 24 24">
+                      <svg className="h-3.5 w-3.5 text-purple-600" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                       </svg>
                     )}
@@ -220,18 +221,19 @@ export default function Navbar({ className = "" }: NavbarProps) {
                     {/* User info header */}
                     <div className="p-5 bg-gradient-to-br from-purple-600/10 to-blue-600/10 border-b border-purple-500/20">
                       <div className="flex items-center space-x-3">
-                        <div className="relative w-12 h-12 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 p-[2px]">
-                          <div className="w-full h-full rounded-full bg-background flex items-center justify-center overflow-hidden">
+                        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center">
+                          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-600 to-blue-600" />
+                          <div className="absolute inset-[1.5px] flex items-center justify-center overflow-hidden rounded-full bg-background">
                             {user?.user_metadata?.avatar_url ? (
                               <Image
-                                src={user.user_metadata.avatar_url || "/placeholder.svg"}
-                                alt="Profile"
-                                width={48}
-                                height={48}
-                                className="w-full h-full object-cover"
+                                src={user.user_metadata.avatar_url}
+                                alt="Foto de perfil"
+                                fill
+                                sizes="40px"
+                                className="object-cover"
                               />
                             ) : (
-                              <svg className="w-7 h-7 text-purple-600" fill="currentColor" viewBox="0 0 24 24">
+                              <svg className="h-5 w-5 text-purple-600" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                               </svg>
                             )}
