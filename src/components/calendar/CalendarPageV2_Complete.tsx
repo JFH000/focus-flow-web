@@ -660,7 +660,7 @@ export default function CalendarPageV2({ isDashboard = false }: CalendarPageProp
     console.log("🔄 Cargando eventos por cambio de semana/calendarios...")
     console.log(`   Calendarios visibles (${visibleCalendars.length}):`, visibleCalendars.map(c => c.name))
     fetchEvents()
-  }, [start, end, visibleCalendarIds, fetchEvents])
+  }, [start, end, visibleCalendarIds])
 
   // Cargar eventos al montar el componente
   useEffect(() => {
@@ -694,7 +694,7 @@ export default function CalendarPageV2({ isDashboard = false }: CalendarPageProp
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [fetchEvents])
+  }, [])
 
   // Función interna para sincronizar eventos de calendarios de Google
   const syncAllCalendarsInternal = useCallback(async (weekStart: Date) => {
