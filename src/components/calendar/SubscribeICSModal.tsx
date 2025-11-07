@@ -84,8 +84,6 @@ export default function SubscribeICSModal({ isOpen, onClose, onSuccess }: Subscr
     }
   }
 
-  if (!isOpen) return null
-
   // Cerrar con Escape
   useEffect(() => {
     if (!isOpen || loading) return
@@ -100,12 +98,14 @@ export default function SubscribeICSModal({ isOpen, onClose, onSuccess }: Subscr
     return () => document.removeEventListener('keydown', handleEscape)
   }, [isOpen, loading, resetAndClose])
 
-  if (!isOpen) return null
-
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget && !loading) {
       resetAndClose()
     }
+  }
+
+  if (!isOpen) {
+    return null
   }
 
   return (

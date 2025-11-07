@@ -79,8 +79,6 @@ export default function CreateCalendarModal({ isOpen, onClose, onSuccess }: Crea
     }
   }
 
-  if (!isOpen) return null
-
   // Cerrar con Escape (solo si no está cargando)
   useEffect(() => {
     if (!isOpen || loading) return
@@ -99,6 +97,10 @@ export default function CreateCalendarModal({ isOpen, onClose, onSuccess }: Crea
     if (e.target === e.currentTarget && !loading) {
       resetAndClose()
     }
+  }
+
+  if (!isOpen) {
+    return null
   }
 
   return (
