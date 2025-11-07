@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client"
 import type { Calendar, CalendarInsert, CalendarUpdate, CalendarWithStats } from "@/types/database"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useState, useMemo } from "react"
 
 interface UseCalendarsReturn {
   calendars: Calendar[]
@@ -61,13 +61,16 @@ export function useCalendars(): UseCalendarsReturn {
     }
   }, [])
 
+  // Cargar calendarios al iniciar
   useEffect(() => {
     fetchCalendars()
-  }, [fetchCalendars])
+  }, [])
 
   // Suscripción en tiempo real a cambios en calendarios
   useEffect(() => {
     const supabase = createClient()
+    
+    let isMounted = true
     
     // Crear canal de suscripción
     const channel = supabase
@@ -81,17 +84,20 @@ export function useCalendars(): UseCalendarsReturn {
         },
         (payload) => {
           console.log('📡 Cambio detectado en calendarios:', payload.eventType)
-          // Refrescar calendarios cuando hay cualquier cambio
-          fetchCalendars()
+          // Refrescar calendarios cuando hay cualquier cambio (solo si está montado)
+          if (isMounted) {
+            fetchCalendars()
+          }
         }
       )
       .subscribe()
 
     // Cleanup: desuscribirse al desmontar
     return () => {
+      isMounted = false
       supabase.removeChannel(channel)
     }
-  }, [fetchCalendars])
+  }, [])
 
   const createCalendar = useCallback(
     async (calendarData: Omit<CalendarInsert, "owner_id">): Promise<Calendar> => {
@@ -320,7 +326,11 @@ export function useCalendars(): UseCalendarsReturn {
     }
   }, [])
 
-  const visibleCalendars = calendars.filter((c) => c.is_visible)
+  // Usar useMemo para que visibleCalendars no se recree en cada render
+  const visibleCalendars = useMemo(
+    () => calendars.filter((c) => c.is_visible),
+    [calendars]
+  )
 
   return {
     calendars,

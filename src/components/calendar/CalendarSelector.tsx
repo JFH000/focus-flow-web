@@ -17,11 +17,6 @@ export default function CalendarSelector({ onCalendarToggle, onCreateCalendar, o
   const [calendarToDelete, setCalendarToDelete] = useState<Calendar | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  // Notificar cambios en calendarios
-  useEffect(() => {
-    onCalendarChange?.()
-  }, [calendars.length, onCalendarChange])
-
   const handleToggleVisibility = async (calendar: Calendar) => {
     try {
       console.log(`🔄 Toggle visibility: ${calendar.name} → ${!calendar.is_visible}`)
