@@ -1,6 +1,6 @@
 "use client"
 
-import { useCalendars } from "@/hooks/useCalendars"
+import type { Calendar, CalendarInsert } from "@/types/database"
 import type React from "react"
 import { useState, useEffect, useCallback } from "react"
 
@@ -8,6 +8,8 @@ interface CreateCalendarModalProps {
   isOpen: boolean
   onClose: () => void
   onSuccess?: () => void
+  createCalendar: (calendar: Omit<CalendarInsert, "owner_id">) => Promise<Calendar>
+  loading: boolean
 }
 
 const CALENDAR_COLORS = [
@@ -25,8 +27,7 @@ const CALENDAR_COLORS = [
   { name: "Teal", value: "#14b8a6" },
 ]
 
-export default function CreateCalendarModal({ isOpen, onClose, onSuccess }: CreateCalendarModalProps) {
-  const { createCalendar, loading } = useCalendars()
+export default function CreateCalendarModal({ isOpen, onClose, onSuccess, createCalendar, loading }: CreateCalendarModalProps) {
   const [formData, setFormData] = useState({
     name: "",
     color: CALENDAR_COLORS[0].value,

@@ -1,18 +1,34 @@
 "use client"
 
-import { useCalendars } from "@/hooks/useCalendars"
 import type { Calendar } from "@/types/database"
 import { useState, useEffect } from "react"
+import { toast } from "sonner"
 
 interface CalendarSelectorProps {
+  calendars: Calendar[]
+  loading: boolean
+  toggleCalendarVisibility: (id: string, isVisible: boolean) => Promise<void>
+  setPrimaryCalendar: (id: string) => Promise<void>
+  toggleCalendarFavorite: (id: string, isFavorite: boolean) => Promise<void>
+  deleteCalendar: (id: string) => Promise<void>
   onCalendarToggle?: (calendarId: string, isVisible: boolean) => void
   onCreateCalendar?: () => void
   onCalendarChange?: () => void
   onRefreshEvents?: () => void
 }
 
-export default function CalendarSelector({ onCalendarToggle, onCreateCalendar, onCalendarChange, onRefreshEvents }: CalendarSelectorProps) {
-  const { calendars, loading, toggleCalendarVisibility, setPrimaryCalendar, toggleCalendarFavorite, deleteCalendar, refreshCalendars } = useCalendars()
+export default function CalendarSelector({
+  calendars,
+  loading,
+  toggleCalendarVisibility,
+  setPrimaryCalendar,
+  toggleCalendarFavorite,
+  deleteCalendar,
+  onCalendarToggle,
+  onCreateCalendar,
+  onCalendarChange,
+  onRefreshEvents,
+}: CalendarSelectorProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [calendarToDelete, setCalendarToDelete] = useState<Calendar | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -28,6 +44,7 @@ export default function CalendarSelector({ onCalendarToggle, onCreateCalendar, o
       onRefreshEvents?.()
     } catch (error) {
       console.error("Error toggling calendar visibility:", error)
+      toast.error("No se pudo actualizar la visibilidad del calendario")
     }
   }
 
@@ -37,6 +54,7 @@ export default function CalendarSelector({ onCalendarToggle, onCreateCalendar, o
       await setPrimaryCalendar(calendarId)
     } catch (error) {
       console.error("Error setting primary calendar:", error)
+      toast.error("No se pudo establecer el calendario principal")
     }
   }
 
@@ -46,6 +64,7 @@ export default function CalendarSelector({ onCalendarToggle, onCreateCalendar, o
       await toggleCalendarFavorite(calendar.id, !calendar.is_favorite)
     } catch (error) {
       console.error("Error toggling favorite:", error)
+      toast.error("No se pudo actualizar el favorito")
     }
   }
 
@@ -60,10 +79,11 @@ export default function CalendarSelector({ onCalendarToggle, onCreateCalendar, o
     setIsDeleting(true)
     try {
       await deleteCalendar(calendarToDelete.id)
+      toast.success(`Calendario "${calendarToDelete.name}" eliminado`)
       setCalendarToDelete(null)
     } catch (error) {
       console.error("Error deleting calendar:", error)
-      alert(error instanceof Error ? error.message : "Error al eliminar calendario")
+      toast.error(error instanceof Error ? error.message : "Error al eliminar calendario")
     } finally {
       setIsDeleting(false)
     }
@@ -148,20 +168,26 @@ export default function CalendarSelector({ onCalendarToggle, onCreateCalendar, o
 
             {/* Contenido scrollable */}
             <div className="flex-1 overflow-y-auto min-h-0 overscroll-contain">
-              {loading && (
+              {loading && calendars.length === 0 && (
                 <div className="p-4 text-center text-sm text-muted-foreground">
                   Cargando calendarios...
                 </div>
               )}
 
-              {!loading && calendars.length === 0 && (
+              {calendars.length === 0 && !loading && (
                 <div className="p-4 text-center text-sm text-muted-foreground">
                   No tienes calendarios aún
                 </div>
               )}
 
-              {!loading && calendars.length > 0 && (
-                <div className="p-2">
+              {calendars.length > 0 && (
+                <div className="relative p-2">
+                  {loading && (
+                    <div className="absolute inset-0 bg-background/80 backdrop-blur-[2px] flex items-center justify-center text-xs text-muted-foreground rounded-md">
+                      Actualizando calendarios...
+                    </div>
+                  )}
+
                 {calendars.map((calendar) => (
                   <div
                     key={calendar.id}

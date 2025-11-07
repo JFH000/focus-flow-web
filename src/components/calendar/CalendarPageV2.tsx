@@ -13,6 +13,7 @@ import AppLayout from "../AppLayout"
 import ProtectedRoute from "../ProtectedRoute"
 import CalendarSelector from "./CalendarSelector"
 import CreateCalendarModal from "./CreateCalendarModal"
+import { toast } from "sonner"
 
 interface CalendarPageProps {
   isDashboard?: boolean
@@ -30,7 +31,17 @@ export default function CalendarPageV2({ isDashboard = false }: CalendarPageProp
   const { start, end } = useMemo(() => getWeekRange(anchor), [anchor])
   
   // Hooks
-  const { calendars, visibleCalendars, refreshCalendars } = useCalendars()
+  const {
+    calendars,
+    visibleCalendars,
+    refreshCalendars,
+    createCalendar: createCalendarFn,
+    loading: calendarsLoading,
+    toggleCalendarVisibility,
+    setPrimaryCalendar,
+    toggleCalendarFavorite,
+    deleteCalendar,
+  } = useCalendars()
   const { 
     syncGoogleCalendars,
     syncCalendarEvents,
@@ -38,7 +49,8 @@ export default function CalendarPageV2({ isDashboard = false }: CalendarPageProp
     updateEvent,
     deleteEvent,
     loading: googleLoading,
-    error: googleError 
+    error: googleError,
+    clearError: clearGoogleError,
   } = useGoogleCalendar()
   const { session, connectGoogleCalendar, loading: authLoading } = useAuth()
 
@@ -49,7 +61,6 @@ export default function CalendarPageV2({ isDashboard = false }: CalendarPageProp
   const [showCreateEventModal, setShowCreateEventModal] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>()
   const [selectedTime, setSelectedTime] = useState<string | undefined>()
-  const [syncMessage, setSyncMessage] = useState<string | null>(null)
   const [hasCalendarAccess, setHasCalendarAccess] = useState(false)
   const [showSyncMenu, setShowSyncMenu] = useState(false)
 
@@ -79,6 +90,13 @@ export default function CalendarPageV2({ isDashboard = false }: CalendarPageProp
 
     checkCalendarAccess()
   }, [session])
+
+  useEffect(() => {
+    if (googleError) {
+      toast.error(googleError)
+      clearGoogleError()
+    }
+  }, [googleError, clearGoogleError])
 
   // Obtener eventos de los calendarios visibles
   const fetchEvents = useCallback(async () => {
@@ -184,44 +202,39 @@ export default function CalendarPageV2({ isDashboard = false }: CalendarPageProp
   }, [hasCalendarAccess, syncCalendarEvents])
 
   // Sincronizar calendarios de Google
-  const handleSyncGoogleCalendars = useCallback(async () => {
-    if (!hasCalendarAccess) {
-      setSyncMessage("❌ Necesitas conectar tu Google Calendar primero")
-      return
-    }
-
-    setSyncMessage("Sincronizando calendarios de Google...")
-    try {
-      await syncGoogleCalendars()
-      await refreshCalendars()
-      setSyncMessage("✅ Calendarios sincronizados")
-      setTimeout(() => setSyncMessage(null), 3000)
-    } catch (error) {
-      console.error("Error syncing Google calendars:", error)
-      setSyncMessage("❌ Error al sincronizar calendarios")
-      setTimeout(() => setSyncMessage(null), 5000)
-    }
-  }, [hasCalendarAccess, syncGoogleCalendars, refreshCalendars])
-
-  // Sincronizar eventos de todos los calendarios
   const handleSyncAllEvents = useCallback(async () => {
     if (!hasCalendarAccess) {
-      setSyncMessage("❌ Necesitas conectar tu Google Calendar primero")
+      toast.error("Necesitas conectar tu Google Calendar primero")
       return
     }
 
-    setSyncMessage("Sincronizando eventos...")
+    const toastId = toast.loading("Sincronizando eventos...")
     try {
       await syncAllCalendarsInternal(start)
       await fetchEvents()
-      setSyncMessage("✅ Eventos sincronizados")
-      setTimeout(() => setSyncMessage(null), 3000)
+      toast.success("Eventos sincronizados", { id: toastId })
     } catch (error) {
       console.error("Error syncing events:", error)
-      setSyncMessage("❌ Error al sincronizar eventos")
-      setTimeout(() => setSyncMessage(null), 5000)
+      toast.error("Error al sincronizar eventos", { id: toastId })
     }
   }, [hasCalendarAccess, syncAllCalendarsInternal, start, fetchEvents])
+
+  const handleSyncGoogleCalendars = useCallback(async () => {
+    if (!hasCalendarAccess) {
+      toast.error("Necesitas conectar tu Google Calendar primero")
+      return
+    }
+
+    const toastId = toast.loading("Sincronizando calendarios de Google...")
+    try {
+      await syncGoogleCalendars()
+      await refreshCalendars()
+      toast.success("Calendarios sincronizados", { id: toastId })
+    } catch (error) {
+      console.error("Error syncing Google calendars:", error)
+      toast.error("Error al sincronizar calendarios", { id: toastId })
+    }
+  }, [hasCalendarAccess, syncGoogleCalendars, refreshCalendars])
 
   // Auto-sincronización periódica (solo si está conectado a Google y tiene calendarios de Google)
   useEffect(() => {
@@ -276,19 +289,6 @@ export default function CalendarPageV2({ isDashboard = false }: CalendarPageProp
 
   const calendarContent = (
     <div className={`calendar-container ${isDashboard ? "h-full flex flex-col bg-background overflow-hidden" : "h-full flex flex-col bg-background overflow-hidden"}`}>
-      {/* Messages */}
-      {syncMessage && (
-        <div className="px-3 md:px-6 py-2 bg-primary/10 text-primary text-xs md:text-sm text-center">
-          {syncMessage}
-        </div>
-      )}
-
-      {googleError && (
-        <div className="px-3 md:px-6 py-2 bg-red-100 text-red-700 text-xs md:text-sm text-center">
-          {googleError}
-        </div>
-      )}
-
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between px-3 md:px-6 py-3 md:py-4 border-b border-border bg-background/95 backdrop-blur sticky top-0 z-40 gap-3 md:gap-0">
         {/* Navegación y título */}
@@ -346,7 +346,16 @@ export default function CalendarPageV2({ isDashboard = false }: CalendarPageProp
         {/* Acciones */}
         <div className="flex items-center gap-2">
           {/* Selector de calendarios */}
-          <CalendarSelector onCreateCalendar={() => setShowCreateCalendarModal(true)} />
+          <CalendarSelector
+            calendars={calendars}
+            loading={calendarsLoading}
+            toggleCalendarVisibility={toggleCalendarVisibility}
+            setPrimaryCalendar={setPrimaryCalendar}
+            toggleCalendarFavorite={toggleCalendarFavorite}
+            deleteCalendar={deleteCalendar}
+            onCreateCalendar={() => setShowCreateCalendarModal(true)}
+            onRefreshEvents={fetchEvents}
+          />
 
           {/* Menú de sincronización con proveedores */}
           <div className="relative">
@@ -551,11 +560,12 @@ export default function CalendarPageV2({ isDashboard = false }: CalendarPageProp
       <CreateCalendarModal
         isOpen={showCreateCalendarModal}
         onClose={() => setShowCreateCalendarModal(false)}
-        onSuccess={() => {
-          refreshCalendars()
-          setSyncMessage("✅ Calendario creado correctamente")
-          setTimeout(() => setSyncMessage(null), 3000)
+        onSuccess={async () => {
+          await refreshCalendars()
+          toast.success("Calendario creado correctamente")
         }}
+        createCalendar={createCalendarFn}
+        loading={calendarsLoading}
       />
 
       {/* Botón flotante para crear evento */}

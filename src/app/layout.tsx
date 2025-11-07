@@ -3,6 +3,7 @@ import { ChatProvider } from "@/contexts/ChatContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import { Toaster } from "sonner";
 
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -49,6 +50,7 @@ export default function RootLayout({
           <AuthProvider>
             <ChatProvider>
               {children}
+              <Toaster position="top-center" richColors expand />
               <Script
           src="https://t.contentsquare.net/uxa/01501fecfa08c.js"
           strategy="afterInteractive"

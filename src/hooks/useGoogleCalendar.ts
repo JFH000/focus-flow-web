@@ -541,43 +541,43 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
 
       // Si es un calendario de Google, crear también en Google
       if (calendar.external_provider === "google" && calendar.external_calendar_id) {
-        const googleEvent = {
-          summary: eventData.title,
-          description: eventData.description,
-          location: eventData.location,
-          start: eventData.all_day
-            ? { date: eventData.start.date || eventData.start.dateTime?.split("T")[0] }
-            : { dateTime: eventData.start.dateTime || eventData.start.date },
-          end: eventData.all_day
-            ? { date: eventData.end.date || eventData.end.dateTime?.split("T")[0] }
-            : { dateTime: eventData.end.dateTime || eventData.end.date },
-          ...(eventData.colorId && { colorId: eventData.colorId }),
-          ...(eventData.recurrence && eventData.recurrence.length > 0 && { recurrence: eventData.recurrence }),
-        }
+      const googleEvent = {
+        summary: eventData.title,
+        description: eventData.description,
+        location: eventData.location,
+        start: eventData.all_day
+          ? { date: eventData.start.date || eventData.start.dateTime?.split("T")[0] }
+          : { dateTime: eventData.start.dateTime || eventData.start.date },
+        end: eventData.all_day
+          ? { date: eventData.end.date || eventData.end.dateTime?.split("T")[0] }
+          : { dateTime: eventData.end.dateTime || eventData.end.date },
+        ...(eventData.colorId && { colorId: eventData.colorId }),
+        ...(eventData.recurrence && eventData.recurrence.length > 0 && { recurrence: eventData.recurrence }),
+      }
 
         const response = await fetch(
           `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendar.external_calendar_id)}/events`,
           {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${session.provider_token}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(googleEvent),
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.provider_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(googleEvent),
           },
         )
 
-        if (!response.ok) {
-          if (response.status === 401) {
+      if (!response.ok) {
+        if (response.status === 401) {
             throw new Error("Token de Google expirado")
-          }
-          if (response.status === 403) {
-            throw new Error("PERMISSIONS_REQUIRED: No tienes permisos para crear eventos")
-          }
-          throw new Error(`Error de Google Calendar: ${response.status}`)
         }
+        if (response.status === 403) {
+            throw new Error("PERMISSIONS_REQUIRED: No tienes permisos para crear eventos")
+        }
+        throw new Error(`Error de Google Calendar: ${response.status}`)
+      }
 
-        const createdEvent = await response.json()
+      const createdEvent = await response.json()
 
         // Guardar en la base de datos local
         await supabase.from("calendar_events").insert({
@@ -599,18 +599,18 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
         // Calendario propio de la app, solo guardar en BD
         await supabase.from("calendar_events").insert({
           calendar_id: calendarId,
-          title: eventData.title,
-          description: eventData.description,
-          location: eventData.location,
+        title: eventData.title,
+        description: eventData.description,
+        location: eventData.location,
           start_time: eventData.all_day ? eventData.start.date! : eventData.start.dateTime!,
           end_time: eventData.all_day ? eventData.end.date! : eventData.end.dateTime!,
           is_all_day: eventData.all_day || false,
           timezone: "UTC",
           metadata: {
             color_id: eventData.colorId,
-            color_hex: getGoogleCalendarColorHex(eventData.colorId),
+        color_hex: getGoogleCalendarColorHex(eventData.colorId),
           },
-        })
+      })
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Error desconocido"
@@ -668,26 +668,26 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
             if (eventData.start) googleEvent.start = { dateTime: eventData.start.dateTime || eventData.start.date }
             if (eventData.end) googleEvent.end = { dateTime: eventData.end.dateTime || eventData.end.date }
           }
-        }
+      }
 
-        const response = await fetch(
+      const response = await fetch(
           `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendar.external_calendar_id)}/events/${event.external_event_id}`,
-          {
-            method: "PATCH",
-            headers: {
-              Authorization: `Bearer ${session.provider_token}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(googleEvent),
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${session.provider_token}`,
+            "Content-Type": "application/json",
           },
-        )
+          body: JSON.stringify(googleEvent),
+        },
+      )
 
-        if (!response.ok) {
+      if (!response.ok) {
           if (response.status === 404) {
             console.warn("Evento no encontrado en Google Calendar, actualizando solo en BD local")
           } else {
-            throw new Error(`Error de Google Calendar: ${response.status}`)
-          }
+        throw new Error(`Error de Google Calendar: ${response.status}`)
+      }
         }
       }
 
@@ -810,19 +810,19 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
 
       // Si es de Google, actualizar en Google
       if (calendar.external_provider === "google") {
-        const response = await fetch(
+      const response = await fetch(
           `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendar.external_calendar_id)}/events/${externalEventId}`,
-          {
-            method: "PATCH",
-            headers: {
-              Authorization: `Bearer ${session.provider_token}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ colorId }),
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${session.provider_token}`,
+            "Content-Type": "application/json",
           },
-        )
+          body: JSON.stringify({ colorId }),
+        },
+      )
 
-        if (!response.ok) {
+      if (!response.ok) {
           throw new Error(`Error de Google Calendar: ${response.status}`)
         }
       }

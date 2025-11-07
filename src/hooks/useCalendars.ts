@@ -24,6 +24,15 @@ export function useCalendars(): UseCalendarsReturn {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const sortCalendars = useCallback((items: Calendar[]) => {
+    return [...items].sort((a, b) => {
+      if (a.is_primary !== b.is_primary) {
+        return a.is_primary ? -1 : 1
+      }
+      return (a.name || "").localeCompare(b.name || "")
+    })
+  }, [])
+
   const fetchCalendars = useCallback(async () => {
     setLoading(true)
     setError(null)
@@ -51,7 +60,7 @@ export function useCalendars(): UseCalendarsReturn {
         throw new Error(`Error al cargar calendarios: ${fetchError.message || JSON.stringify(fetchError)}`)
       }
 
-      setCalendars(data || [])
+      setCalendars(sortCalendars(data || []))
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Error al cargar calendarios"
       setError(errorMessage)
@@ -59,12 +68,12 @@ export function useCalendars(): UseCalendarsReturn {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [sortCalendars])
 
   // Cargar calendarios al iniciar
   useEffect(() => {
     fetchCalendars()
-  }, [])
+  }, [fetchCalendars])
 
   // Suscripción en tiempo real a cambios en calendarios
   useEffect(() => {
@@ -97,7 +106,7 @@ export function useCalendars(): UseCalendarsReturn {
       isMounted = false
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [fetchCalendars])
 
   const createCalendar = useCallback(
     async (calendarData: Omit<CalendarInsert, "owner_id">): Promise<Calendar> => {
@@ -134,6 +143,13 @@ export function useCalendars(): UseCalendarsReturn {
           throw new Error(`No se pudo crear el calendario: ${insertError.message || JSON.stringify(insertError)}`)
         }
 
+        if (data) {
+          setCalendars(prev => {
+            const withoutNew = prev.filter(cal => cal.id !== data.id)
+            return sortCalendars([...withoutNew, data])
+          })
+        }
+
         await fetchCalendars()
         return data
       } catch (err) {
@@ -145,7 +161,7 @@ export function useCalendars(): UseCalendarsReturn {
         setLoading(false)
       }
     },
-    [fetchCalendars],
+    [fetchCalendars, sortCalendars],
   )
 
   const updateCalendar = useCallback(

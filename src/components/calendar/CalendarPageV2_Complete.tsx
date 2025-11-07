@@ -14,6 +14,7 @@ import ProtectedRoute from "../ProtectedRoute"
 import CalendarSelector from "./CalendarSelector"
 import CreateCalendarModal from "./CreateCalendarModal"
 import SubscribeICSModal from "./SubscribeICSModal"
+import { toast } from "sonner"
 
 // Colores de eventos
 const EVENT_COLORS = [
@@ -513,14 +514,25 @@ export default function CalendarPageV2({ isDashboard = false }: CalendarPageProp
   const { start, end } = useMemo(() => getWeekRange(anchor), [anchor])
   
   // Hooks
-  const { calendars, visibleCalendars, refreshCalendars } = useCalendars()
+  const {
+    calendars,
+    visibleCalendars,
+    refreshCalendars,
+    createCalendar: createCalendarFn,
+    loading: calendarsLoading,
+    toggleCalendarVisibility,
+    setPrimaryCalendar,
+    toggleCalendarFavorite,
+    deleteCalendar,
+  } = useCalendars()
   const { 
     syncGoogleCalendars,
     syncCalendarEvents,
     createEvent,
     deleteEvent,
     loading: googleLoading,
-    error: googleError 
+    error: googleError,
+    clearError: clearGoogleError,
   } = useGoogleCalendar()
   const { session, connectGoogleCalendar, loading: authLoading } = useAuth()
 
@@ -534,7 +546,6 @@ export default function CalendarPageV2({ isDashboard = false }: CalendarPageProp
   const [selectedTime, setSelectedTime] = useState<string | undefined>()
   const [selectedEvent, setSelectedEvent] = useState<CalendarEventExtended | null>(null)
   const [editingEvent, setEditingEvent] = useState<CalendarEventExtended | null>(null)
-  const [syncMessage, setSyncMessage] = useState<string | null>(null)
   const [hasCalendarAccess, setHasCalendarAccess] = useState(false)
   const [showSyncMenu, setShowSyncMenu] = useState(false)
   
@@ -572,6 +583,13 @@ export default function CalendarPageV2({ isDashboard = false }: CalendarPageProp
 
     checkCalendarAccess()
   }, [session])
+
+  useEffect(() => {
+    if (googleError) {
+      toast.error(googleError)
+      clearGoogleError()
+    }
+  }, [googleError, clearGoogleError])
 
   // Obtener eventos de los calendarios visibles
   const fetchEvents = useCallback(async () => {
@@ -746,65 +764,53 @@ export default function CalendarPageV2({ isDashboard = false }: CalendarPageProp
   }, [hasCalendarAccess, syncCalendarEvents])
 
   // Handlers
+  const handleSyncAllEvents = useCallback(
+    async (skipAccessCheck = false) => {
+      if (!hasCalendarAccess && !skipAccessCheck) {
+        toast.error("Necesitas conectar tu Google Calendar primero")
+        return
+      }
+
+      const toastId = toast.loading("Sincronizando eventos de todos los calendarios...")
+      try {
+        await syncAllCalendarsInternal(new Date())
+        await new Promise((resolve) => setTimeout(resolve, 500))
+        await fetchEvents()
+        toast.success("Eventos sincronizados correctamente", { id: toastId })
+      } catch (error) {
+        console.error("Error syncing events:", error)
+        const errorMsg = error instanceof Error ? error.message : "Error desconocido"
+        toast.error(`Error al sincronizar eventos: ${errorMsg}`, { id: toastId })
+      }
+    },
+    [hasCalendarAccess, syncAllCalendarsInternal, fetchEvents],
+  )
+
   const handleSyncGoogleCalendars = useCallback(async () => {
     if (!hasCalendarAccess) {
-      setSyncMessage("❌ Necesitas conectar tu Google Calendar primero")
+      toast.error("Necesitas conectar tu Google Calendar primero")
       return
     }
 
-    setSyncMessage("Sincronizando calendarios de Google...")
+    const toastId = toast.loading("Sincronizando calendarios de Google...")
     try {
       await syncGoogleCalendars()
       await refreshCalendars()
-      
-      // Después de sincronizar calendarios, sincronizar también los eventos
-      setSyncMessage("✅ Calendarios sincronizados. Sincronizando eventos...")
-      await syncAllCalendarsInternal(start)
-      await fetchEvents()
-      
-      setSyncMessage("✅ Sincronización completa")
-      setTimeout(() => setSyncMessage(null), 3000)
+      toast.success("Calendarios sincronizados correctamente", { id: toastId })
+      await handleSyncAllEvents(true)
     } catch (error) {
       console.error("Error syncing Google calendars:", error)
-      setSyncMessage("❌ Error al sincronizar calendarios")
-      setTimeout(() => setSyncMessage(null), 5000)
+      toast.error("Error al sincronizar calendarios", { id: toastId })
     }
-  }, [hasCalendarAccess, syncGoogleCalendars, refreshCalendars, syncAllCalendarsInternal, start, fetchEvents])
-
-  const handleSyncAllEvents = useCallback(async () => {
-    if (!hasCalendarAccess) {
-      setSyncMessage("❌ Necesitas conectar tu Google Calendar primero")
-      return
-    }
-
-    setSyncMessage("🔄 Sincronizando eventos de todos los calendarios...")
-    try {
-      // Sincronizar con un rango amplio (no solo la semana actual)
-      await syncAllCalendarsInternal(new Date()) // Pasamos la fecha actual como referencia
-      
-      // Esperar un momento para que se inserten los eventos
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
-      // Recargar eventos
-      await fetchEvents()
-      
-      setSyncMessage("✅ Eventos sincronizados correctamente")
-      setTimeout(() => setSyncMessage(null), 3000)
-    } catch (error) {
-      console.error("Error syncing events:", error)
-      const errorMsg = error instanceof Error ? error.message : "Error desconocido"
-      setSyncMessage(`❌ Error: ${errorMsg}`)
-      setTimeout(() => setSyncMessage(null), 5000)
-    }
-  }, [hasCalendarAccess, syncAllCalendarsInternal, fetchEvents])
+  }, [hasCalendarAccess, syncGoogleCalendars, refreshCalendars, handleSyncAllEvents])
 
   const handleCreateEvent = async (calendarId: string, eventData: any) => {
     try {
       await createEvent(calendarId, eventData)
       await fetchEvents()
-      setSyncMessage("✅ Evento creado correctamente")
-      setTimeout(() => setSyncMessage(null), 3000)
+      toast.success("Evento creado correctamente")
     } catch (error) {
+      toast.error("Error al crear evento")
       throw error
     }
   }
@@ -813,12 +819,10 @@ export default function CalendarPageV2({ isDashboard = false }: CalendarPageProp
     try {
       await deleteEvent(eventId)
       await fetchEvents()
-      setSyncMessage("✅ Evento eliminado correctamente")
-      setTimeout(() => setSyncMessage(null), 3000)
+      toast.success("Evento eliminado correctamente")
     } catch (error) {
       console.error("Error deleting event:", error)
-      setSyncMessage("❌ Error al eliminar evento")
-      setTimeout(() => setSyncMessage(null), 5000)
+      toast.error("Error al eliminar evento")
     }
   }
 
@@ -857,19 +861,6 @@ export default function CalendarPageV2({ isDashboard = false }: CalendarPageProp
 
   const calendarContent = (
     <div className="h-full flex flex-col bg-background overflow-hidden">
-      {/* Messages */}
-      {syncMessage && (
-        <div className="px-3 md:px-6 py-2 bg-primary/10 text-primary text-xs md:text-sm text-center">
-          {syncMessage}
-        </div>
-      )}
-
-      {googleError && (
-        <div className="px-3 md:px-6 py-2 bg-red-100 text-red-700 text-xs md:text-sm text-center">
-          {googleError}
-        </div>
-      )}
-
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between px-3 md:px-6 py-3 md:py-4 border-b border-border bg-background/95 backdrop-blur sticky top-0 z-40 gap-3">
         {/* Navegación */}
@@ -920,6 +911,12 @@ export default function CalendarPageV2({ isDashboard = false }: CalendarPageProp
           </button>
 
           <CalendarSelector 
+            calendars={calendars}
+            loading={calendarsLoading}
+            toggleCalendarVisibility={toggleCalendarVisibility}
+            setPrimaryCalendar={setPrimaryCalendar}
+            toggleCalendarFavorite={toggleCalendarFavorite}
+            deleteCalendar={deleteCalendar}
             onCreateCalendar={() => setShowCreateCalendarModal(true)} 
             onRefreshEvents={fetchEvents}
           />
@@ -1371,21 +1368,21 @@ export default function CalendarPageV2({ isDashboard = false }: CalendarPageProp
       <CreateCalendarModal
         isOpen={showCreateCalendarModal}
         onClose={() => setShowCreateCalendarModal(false)}
-        onSuccess={() => {
-          refreshCalendars()
-          setSyncMessage("✅ Calendario creado correctamente")
-          setTimeout(() => setSyncMessage(null), 3000)
+        onSuccess={async () => {
+          await refreshCalendars()
+          toast.success("Calendario creado correctamente")
         }}
+        createCalendar={createCalendarFn}
+        loading={calendarsLoading}
       />
 
       <SubscribeICSModal
         isOpen={showSubscribeICSModal}
         onClose={() => setShowSubscribeICSModal(false)}
-        onSuccess={() => {
-          refreshCalendars()
-          fetchEvents()
-          setSyncMessage("✅ Calendario ICS suscrito correctamente")
-          setTimeout(() => setSyncMessage(null), 3000)
+        onSuccess={async () => {
+          await refreshCalendars()
+          await fetchEvents()
+          toast.success("Calendario ICS suscrito correctamente")
         }}
       />
 
