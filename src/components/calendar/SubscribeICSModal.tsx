@@ -2,7 +2,7 @@
 
 import { useICalendar } from "@/hooks/useICalendar"
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 
 interface SubscribeICSModalProps {
   isOpen: boolean
@@ -31,6 +31,12 @@ export default function SubscribeICSModal({ isOpen, onClose, onSuccess }: Subscr
     color: CALENDAR_COLORS[0].value,
   })
   const [error, setError] = useState<string | null>(null)
+
+  const resetAndClose = useCallback(() => {
+    setFormData({ name: '', icsUrl: '', color: CALENDAR_COLORS[0].value })
+    setError(null)
+    onClose()
+  }, [onClose])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -71,44 +77,34 @@ export default function SubscribeICSModal({ isOpen, onClose, onSuccess }: Subscr
       })
 
       onSuccess?.()
-      onClose()
+      resetAndClose()
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Error al suscribirse al calendario"
       setError(errorMessage)
     }
   }
 
-  const handleClose = () => {
-    if (!loading) {
-      setFormData({
-        name: "",
-        icsUrl: "",
-        color: CALENDAR_COLORS[0].value,
-      })
-      setError(null)
-      onClose()
-    }
-  }
+  if (!isOpen) return null
 
   // Cerrar con Escape
   useEffect(() => {
+    if (!isOpen || loading) return
+    
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !loading) {
-        handleClose()
+      if (e.key === 'Escape') {
+        resetAndClose()
       }
     }
 
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape)
-      return () => document.removeEventListener('keydown', handleEscape)
-    }
-  }, [isOpen, loading])
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [isOpen, loading, resetAndClose])
 
   if (!isOpen) return null
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget && !loading) {
-      handleClose()
+      resetAndClose()
     }
   }
 
@@ -123,7 +119,7 @@ export default function SubscribeICSModal({ isOpen, onClose, onSuccess }: Subscr
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg md:text-xl font-semibold">Suscribirse a Calendario</h2>
             <button
-              onClick={handleClose}
+              onClick={resetAndClose}
               disabled={loading}
               className="p-1 rounded-md hover:bg-muted transition-colors disabled:opacity-50"
             >
@@ -224,7 +220,7 @@ export default function SubscribeICSModal({ isOpen, onClose, onSuccess }: Subscr
             <div className="flex gap-2 pt-2">
               <button
                 type="button"
-                onClick={handleClose}
+                onClick={resetAndClose}
                 disabled={loading}
                 className="flex-1 px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-md hover:bg-muted transition-colors disabled:opacity-50"
               >

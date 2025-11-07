@@ -2,7 +2,7 @@
 
 import { useCalendars } from "@/hooks/useCalendars"
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 
 interface CreateCalendarModalProps {
   isOpen: boolean
@@ -35,6 +35,12 @@ export default function CreateCalendarModal({ isOpen, onClose, onSuccess }: Crea
   })
   const [error, setError] = useState<string | null>(null)
 
+  const resetAndClose = useCallback(() => {
+    setFormData({ name: '', color: CALENDAR_COLORS[0].value, is_primary: false, is_favorite: false })
+    setError(null)
+    onClose()
+  }, [onClose])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
@@ -64,49 +70,36 @@ export default function CreateCalendarModal({ isOpen, onClose, onSuccess }: Crea
         is_primary: false,
         is_favorite: false,
       })
-      
+
       onSuccess?.()
-      onClose()
+      resetAndClose()
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Error al crear calendario"
       setError(errorMessage)
     }
   }
 
-  const handleClose = () => {
-    if (!loading) {
-      setFormData({
-        name: "",
-        color: CALENDAR_COLORS[0].value,
-        is_primary: false,
-        is_favorite: false,
-      })
-      setError(null)
-      onClose()
-    }
-  }
-
   if (!isOpen) return null
-
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget && !loading) {
-      handleClose()
-    }
-  }
 
   // Cerrar con Escape (solo si no está cargando)
   useEffect(() => {
+    if (!isOpen || loading) return
+    
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !loading) {
-        handleClose()
+      if (e.key === 'Escape') {
+        resetAndClose()
       }
     }
 
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape)
-      return () => document.removeEventListener('keydown', handleEscape)
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [isOpen, loading, resetAndClose])
+
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget && !loading) {
+      resetAndClose()
     }
-  }, [isOpen, loading])
+  }
 
   return (
     <div 
@@ -119,7 +112,7 @@ export default function CreateCalendarModal({ isOpen, onClose, onSuccess }: Crea
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg md:text-xl font-semibold">Crear Calendario</h2>
             <button
-              onClick={handleClose}
+              onClick={resetAndClose}
               disabled={loading}
               className="p-1 rounded-md hover:bg-muted transition-colors disabled:opacity-50"
             >
@@ -229,7 +222,7 @@ export default function CreateCalendarModal({ isOpen, onClose, onSuccess }: Crea
             <div className="flex gap-2 pt-2">
               <button
                 type="button"
-                onClick={handleClose}
+                onClick={resetAndClose}
                 disabled={loading}
                 className="flex-1 px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-md hover:bg-muted transition-colors disabled:opacity-50"
               >
