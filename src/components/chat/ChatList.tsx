@@ -343,7 +343,32 @@ function GroupHeader({ title }: { title: string }) {
 }
 
 export default function ChatList({ className = '' }: ChatListProps) {
-  const { chats, loading } = useChat()
+  const { chats, loading, hasMoreChats, loadingMoreChats, loadMoreChats } = useChat()
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    if (!sentinel || !hasMoreChats) return
+
+    const root = sentinel.closest('[data-chat-scroll]') ?? undefined
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          loadMoreChats()
+        }
+      },
+      {
+        root,
+        rootMargin: '200px 0px',
+      },
+    )
+
+    observer.observe(sentinel)
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [hasMoreChats, loadMoreChats, chats.length])
 
   // Solo mostrar loading si estamos cargando la lista de chats inicialmente
   if (loading && chats.length === 0) {
@@ -397,6 +422,12 @@ export default function ChatList({ className = '' }: ChatListProps) {
           </div>
         </div>
       ))}
+      <div ref={sentinelRef} className="h-4" aria-hidden="true" />
+      {(loadingMoreChats || hasMoreChats) && (
+        <div className="py-3 text-center text-xs text-muted-foreground">
+          {loadingMoreChats ? 'Cargando más chats…' : 'Desplázate para cargar más'}
+        </div>
+      )}
     </div>
   )
 }

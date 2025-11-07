@@ -549,6 +549,9 @@ export default function CalendarPageV2({ isDashboard = false }: CalendarPageProp
   const [hasCalendarAccess, setHasCalendarAccess] = useState(false)
   const [showSyncMenu, setShowSyncMenu] = useState(false)
   
+  // Referencias para scroll y carga
+  const desktopScrollRef = useRef<HTMLDivElement | null>(null)
+  const mobileScrollRef = useRef<HTMLDivElement | null>(null)
   // Ref para prevenir re-renders infinitos
   const isFetchingRef = useRef(false)
 
@@ -662,12 +665,14 @@ export default function CalendarPageV2({ isDashboard = false }: CalendarPageProp
         throw error
       }
 
-      console.log(`✅ Eventos cargados: ${data?.length || 0}`)
-      if (data && data.length > 0) {
-        console.log("Primer evento:", data[0])
+      const eventsData: CalendarEventExtended[] = data || []
+
+      console.log(`✅ Eventos cargados: ${eventsData.length}`)
+      if (eventsData.length > 0) {
+        console.log("Primer evento:", eventsData[0])
       }
-      
-      setEvents(data || [])
+
+      setEvents(eventsData)
     } catch (error) {
       console.error("Error in fetchEvents:", error)
     } finally {
@@ -675,6 +680,20 @@ export default function CalendarPageV2({ isDashboard = false }: CalendarPageProp
       isFetchingRef.current = false
     }
   }, [start, end])
+
+  const scrollToDefaultHour = useCallback(() => {
+    const DEFAULT_SCROLL_HOUR = 8
+    const HOUR_BLOCK_HEIGHT_PX = 64 // h-16 => 4rem => 64px
+    const EXTRA_PADDING_PX = 48
+    const target = Math.max(DEFAULT_SCROLL_HOUR * HOUR_BLOCK_HEIGHT_PX - EXTRA_PADDING_PX, 0)
+
+    const containers = [desktopScrollRef.current, mobileScrollRef.current]
+    containers.forEach((container) => {
+      if (!container) return
+      if (Math.abs(container.scrollTop - target) <= 4) return
+      container.scrollTo({ top: target })
+    })
+  }, [])
 
   // Crear una key que cambie cuando cambien los calendarios visibles específicos
   const visibleCalendarIds = useMemo(() => {
@@ -695,6 +714,24 @@ export default function CalendarPageV2({ isDashboard = false }: CalendarPageProp
     console.log("🔄 Cargando eventos iniciales...")
     fetchEvents()
   }, [])
+
+  useEffect(() => {
+    const raf = requestAnimationFrame(scrollToDefaultHour)
+    return () => cancelAnimationFrame(raf)
+  }, [scrollToDefaultHour, start])
+
+  useEffect(() => {
+    const handleExternalCalendarRefresh = () => {
+      console.log("🔁 Evento externo calendar:refresh recibido, actualizando eventos...")
+      fetchEvents()
+    }
+
+    window.addEventListener("calendar:refresh", handleExternalCalendarRefresh)
+
+    return () => {
+      window.removeEventListener("calendar:refresh", handleExternalCalendarRefresh)
+    }
+  }, [fetchEvents])
 
   // Suscripción en tiempo real a cambios en eventos
   useEffect(() => {
@@ -1071,7 +1108,7 @@ export default function CalendarPageV2({ isDashboard = false }: CalendarPageProp
       {/* Vista Desktop: Cuadrícula semanal */}
       <div className="hidden md:flex flex-1 flex-col min-h-0 overflow-hidden">
         {/* Contenedor único con scroll para alinear header y body */}
-        <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
+        <div ref={desktopScrollRef} className="flex-1 flex flex-col min-h-0 overflow-y-auto">
           {/* Grid completo (header + body en el mismo contenedor) */}
           <div className="flex flex-col min-w-0">
             {/* Cabecera de días - sticky dentro del scroll */}
@@ -1275,7 +1312,7 @@ export default function CalendarPageV2({ isDashboard = false }: CalendarPageProp
       </div>
 
       {/* Vista Mobile: Lista */}
-      <div className="flex flex-col md:hidden flex-1 overflow-y-auto">
+      <div ref={mobileScrollRef} className="flex flex-col md:hidden flex-1 overflow-y-auto">
         {Array.from({ length: 7 }, (_, i) => addDays(start, i)).map((day) => {
           const key = format(day, "yyyy-MM-dd")
           const dayEvents = eventsByDay.get(key) || []

@@ -19,32 +19,37 @@ export default function ChatSidebar({ className = '' }: ChatSidebarProps) {
     setIsOpen(false)
   }
 
+  const openSidebar = () => setIsOpen(true)
+  const closeSidebar = () => setIsOpen(false)
+
   return (
     <>
       {/* Mobile menu button */}
-      <button
-        onClick={() => setIsOpen(true)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-card border border-border rounded-lg shadow-lg"
-        title="Abrir menú"
-      >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
+      {!isOpen && (
+        <button
+          onClick={openSidebar}
+          className="fixed top-4 left-4 z-40 p-2 bg-card border border-border rounded-lg shadow-lg hover:bg-muted transition-colors"
+          title="Mostrar chats"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      )}
 
       {/* Overlay for mobile */}
       {isOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-40"
-          onClick={() => setIsOpen(false)}
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
+          onClick={closeSidebar}
         />
       )}
 
       {/* Sidebar */}
       <div className={`
-        fixed lg:static inset-y-0 left-0 z-50 w-80 bg-card border-r border-border
+        fixed inset-y-0 left-0 z-50 w-80 bg-card border-r border-border
         transform transition-transform duration-300 ease-in-out
-        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         ${className}
       `}>
         <div className="flex flex-col h-full">
@@ -55,8 +60,8 @@ export default function ChatSidebar({ className = '' }: ChatSidebarProps) {
                 Focus Flow
               </h2>
               <button
-                onClick={() => setIsOpen(false)}
-                className="lg:hidden p-1 hover:bg-muted rounded"
+                onClick={closeSidebar}
+                className="p-1 hover:bg-muted rounded"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -104,7 +109,7 @@ export default function ChatSidebar({ className = '' }: ChatSidebarProps) {
           </div>
 
           {/* Chat list */}
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto p-4" data-chat-scroll>
             <ChatList />
           </div>
 

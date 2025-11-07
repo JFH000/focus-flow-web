@@ -299,28 +299,6 @@ export default function FocoLayout({
   const router = useRouter()
   const pathname = usePathname()
 
-  // Inicializar sidebar según tamaño de pantalla (solo en mount en el cliente)
-  useEffect(() => {
-    const checkScreenSize = () => {
-      if (typeof window === 'undefined') return
-      
-      if (window.innerWidth >= 768) {
-        // En desktop, abrir sidebar por defecto
-        setIsSidebarOpen(true)
-      } else {
-        // En móvil, mantener cerrado
-        setIsSidebarOpen(false)
-      }
-    }
-
-    // Solo ejecutar en el cliente
-    if (typeof window !== 'undefined') {
-      checkScreenSize()
-      window.addEventListener('resize', checkScreenSize)
-      return () => window.removeEventListener('resize', checkScreenSize)
-    }
-  }, [])
-
   // Cerrar sidebar cuando se cierra el modal en móvil
   useEffect(() => {
     if (typeof window === 'undefined') return

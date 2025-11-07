@@ -8,6 +8,8 @@ import { createContext, useCallback, useContext, useEffect, useState } from 'rea
 
 interface ChatContextType {
   chats: Chat[]
+  hasMoreChats: boolean
+  loadingMoreChats: boolean
   currentChat: ChatWithMessages | null
   messages: Message[]
   loading: boolean
@@ -18,12 +20,15 @@ interface ChatContextType {
   sendMessage: (content: string, chatId?: string) => Promise<Message | null>
   clearCurrentChat: () => void
   updateChatTitle: (chatId: string, newTitle: string) => Promise<boolean>
+  loadMoreChats: () => Promise<void>
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
 
 export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [chats, setChats] = useState<Chat[]>([])
+  const [hasMoreChats, setHasMoreChats] = useState(false)
+  const [loadingMoreChats, setLoadingMoreChats] = useState(false)
   const [currentChat, setCurrentChat] = useState<ChatWithMessages | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(false)
@@ -42,17 +47,76 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         .select('*')
         .eq('user_id', user.id)
         .order('updated_at', { ascending: false })
+        .range(0, 19)
 
       if (error) {
         console.error('Error loading chats:', error)
         return
       }
 
-      setChats(data || [])
+      const chatsData = data || []
+      setChats(chatsData)
+
+      const { count } = await supabase
+        .from('chats')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+
+      setHasMoreChats((count ?? 0) > chatsData.length)
     } catch (error) {
       console.error('Error loading chats:', error)
     }
   }, [user, supabase])
+
+  const loadMoreChats = useCallback(async () => {
+    if (!user || !hasMoreChats || chats.length === 0 || loadingMoreChats) return
+
+    try {
+      setLoadingMoreChats(true)
+      const from = chats.length
+      const to = from + 19
+
+      const { data, error } = await supabase
+        .from('chats')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('updated_at', { ascending: false })
+        .range(from, to)
+
+      if (error) {
+        console.error('Error loading more chats:', error)
+        return
+      }
+
+      const newChats = data || []
+      if (newChats.length === 0) {
+        setHasMoreChats(false)
+        return
+      }
+
+      setChats(prev => {
+        const ids = new Set(prev.map(chat => chat.id))
+        const merged = [...prev]
+        newChats.forEach(chat => {
+          if (!ids.has(chat.id)) {
+            merged.push(chat)
+          }
+        })
+        return merged
+      })
+
+      const { count } = await supabase
+        .from('chats')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+
+      setHasMoreChats((count ?? 0) > chats.length + newChats.length)
+    } catch (error) {
+      console.error('Error loading more chats:', error)
+    } finally {
+      setLoadingMoreChats(false)
+    }
+  }, [user, supabase, chats, hasMoreChats, loadingMoreChats])
 
   useEffect(() => {
     if (user) {
@@ -474,6 +538,15 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           : chat
       ))
 
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('calendar:refresh', {
+          detail: {
+            source: 'chat',
+            chatId: targetChatId,
+          }
+        }))
+      }
+
       return userMessageData
     } catch (error) {
       console.error('Error sending message:', error)
@@ -490,6 +563,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
   const value = {
     chats,
+    hasMoreChats,
+    loadingMoreChats,
     currentChat,
     messages,
     loading,
@@ -499,7 +574,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     loadChat,
     sendMessage,
     clearCurrentChat,
-    updateChatTitle
+    updateChatTitle,
+    loadMoreChats
   }
 
   return (

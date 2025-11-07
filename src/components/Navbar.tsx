@@ -1,17 +1,30 @@
 "use client"
 
 import { useAuth } from "@/contexts/AuthContext"
+import { useChat } from "@/contexts/ChatContext"
 import { useTheme } from "@/contexts/ThemeContext"
+import type { Chat } from "@/types/database"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 
 interface NavbarProps {
   className?: string
 }
 
+function buildFocusUrl(chats: Chat[]): string {
+  if (!chats || chats.length === 0) {
+    return "/foco"
+  }
+
+  const sorted = [...chats].sort((a, b) => new Date(b.updated_at ?? b.created_at ?? 0).getTime() - new Date(a.updated_at ?? a.created_at ?? 0).getTime())
+  const latestChat = sorted[0]
+  return latestChat ? `/foco/${latestChat.id}` : "/foco"
+}
+
 export default function Navbar({ className = "" }: NavbarProps) {
   const { user, signOut } = useAuth()
+  const { chats } = useChat()
   const { theme, setTheme } = useTheme()
   const router = useRouter()
   const pathname = usePathname()
@@ -49,7 +62,7 @@ export default function Navbar({ className = "" }: NavbarProps) {
         <div className="flex justify-between items-center h-12">
           {/* Logo and Brand */}
           <div className="flex items-center space-x-3">
-            <button onClick={() => router.push("/foco")} className="flex items-center gap-3 group">
+            <button onClick={() => router.push(buildFocusUrl(chats))} className="flex items-center gap-3 group">
               {/* Brand Name */}
               <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-purple-600 bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
                 FocusFlow
@@ -61,7 +74,7 @@ export default function Navbar({ className = "" }: NavbarProps) {
           {/* Desktop: Botones con texto */}
           <div className="hidden md:flex items-center gap-1">
             <button
-              onClick={() => router.push("/foco")}
+              onClick={() => router.push(buildFocusUrl(chats))}
               className={`px-4 py-2 text-sm rounded-lg transition-all duration-200 flex items-center space-x-2 ${
                 pathname.startsWith("/foco")
                   ? "bg-gradient-to-r from-purple-600/20 to-blue-600/20 text-purple-600 font-medium"
@@ -121,7 +134,7 @@ export default function Navbar({ className = "" }: NavbarProps) {
           {/* Mobile: Solo iconos de Chat y Calendar */}
           <div className="flex md:hidden items-center gap-2">
             <button
-              onClick={() => router.push("/foco")}
+              onClick={() => router.push(buildFocusUrl(chats))}
               className={`p-2 rounded-lg transition-all duration-200 ${
                 pathname.startsWith("/foco")
                   ? "bg-gradient-to-r from-purple-600/20 to-blue-600/20 text-purple-600"

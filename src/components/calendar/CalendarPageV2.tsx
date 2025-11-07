@@ -162,6 +162,19 @@ export default function CalendarPageV2({ isDashboard = false }: CalendarPageProp
     fetchEvents()
   }, [start, end, visibleCalendars.length])
 
+  useEffect(() => {
+    const handleExternalCalendarRefresh = () => {
+      console.log("🔁 Evento externo calendar:refresh recibido, actualizando eventos (V2)...")
+      fetchEvents()
+    }
+
+    window.addEventListener("calendar:refresh", handleExternalCalendarRefresh)
+
+    return () => {
+      window.removeEventListener("calendar:refresh", handleExternalCalendarRefresh)
+    }
+  }, [fetchEvents])
+
   // Función interna para sincronizar eventos de calendarios de Google
   const syncAllCalendarsInternal = useCallback(async (weekStart: Date) => {
     if (!hasCalendarAccess) return
