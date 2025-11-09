@@ -71,11 +71,8 @@ function ChatListItem({ chat }: ChatListItemProps) {
       router.push(`/foco/${chat.id}`)
     }
     
-    // Cerrar sidebar en móvil después de hacer clic en un chat
-    if (window.innerWidth < 768) {
-      // Disparar evento personalizado para cerrar sidebar
-      window.dispatchEvent(new CustomEvent('closeSidebar'))
-    }
+    // Cerrar sidebar (móvil o desktop) después de seleccionar un chat
+    window.dispatchEvent(new CustomEvent('closeSidebar'))
   }
 
   const handleRename = async () => {

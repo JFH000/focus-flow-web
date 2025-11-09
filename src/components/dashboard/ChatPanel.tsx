@@ -59,7 +59,7 @@ export default function ChatPanel({ chatId }: ChatPanelProps) {
   const { loadChat, clearCurrentChat, chats } = useChat()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true) // Abierto por defecto en dashboard
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false)
 
   useEffect(() => {
@@ -90,6 +90,15 @@ export default function ChatPanel({ chatId }: ChatPanelProps) {
     setIsHistoryModalOpen(false)
   }
 
+  useEffect(() => {
+    const handleCloseSidebar = () => {
+      setIsSidebarOpen(false)
+    }
+
+    window.addEventListener('closeSidebar', handleCloseSidebar)
+    return () => window.removeEventListener('closeSidebar', handleCloseSidebar)
+  }, [])
+
   const handleChatClickFromModal = (selectedChatId: string) => {
     const params = new URLSearchParams(searchParams.toString())
     params.set('chat', selectedChatId)
@@ -103,8 +112,8 @@ export default function ChatPanel({ chatId }: ChatPanelProps) {
       <aside 
         className={`flex flex-col border-r border-purple-500/20 bg-gradient-to-b from-purple-600/5 via-blue-600/5 to-purple-600/5 backdrop-blur-xl shadow-lg transition-all duration-300 ${
           isSidebarOpen 
-            ? 'w-64 translate-x-0' 
-            : 'w-16'
+            ? 'w-52 translate-x-0' 
+            : 'w-12'
         } flex-shrink-0`}
       >
         {/* Header del sidebar con botón de toggle */}
@@ -198,15 +207,15 @@ export default function ChatPanel({ chatId }: ChatPanelProps) {
 
         {/* Contenido cuando está colapsado */}
         {!isSidebarOpen && (
-          <div className="flex-1 flex flex-col items-center pt-8 space-y-6">
+          <div className="flex-1 flex flex-col items-center pt-6 space-y-5">
             {/* Botón Nuevo Chat */}
             <button
               onClick={handleNewChat}
-              className="p-3 text-muted-foreground hover:text-white hover:bg-gradient-to-br hover:from-purple-600 hover:to-blue-600 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg active:scale-95 group"
+              className="p-2.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-lg transition-colors duration-200 group"
               title="Nuevo Chat"
             >
               <svg 
-                className="w-6 h-6 group-hover:scale-110 transition-transform duration-200" 
+                className="w-5 h-5 transition-transform duration-200 group-hover:scale-105" 
                 fill="none" 
                 stroke="currentColor" 
                 viewBox="0 0 24 24"
@@ -226,11 +235,11 @@ export default function ChatPanel({ chatId }: ChatPanelProps) {
             {/* Botón Buscar Chat */}
             <button
               onClick={openHistoryModal}
-              className="p-3 text-muted-foreground hover:text-white hover:bg-gradient-to-br hover:from-purple-600 hover:to-blue-600 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg active:scale-95 group"
+              className="p-2.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-lg transition-colors duration-200 group"
               title="Buscar Chat"
             >
               <svg 
-                className="w-6 h-6 group-hover:scale-110 transition-transform duration-200" 
+                className="w-5 h-5 transition-transform duration-200 group-hover:scale-105" 
                 fill="none" 
                 stroke="currentColor" 
                 viewBox="0 0 24 24"

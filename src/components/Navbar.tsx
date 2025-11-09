@@ -7,6 +7,7 @@ import type { Chat } from "@/types/database"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import { toast } from "sonner"
 
 interface NavbarProps {
   className?: string
@@ -29,6 +30,35 @@ export default function Navbar({ className = "" }: NavbarProps) {
   const router = useRouter()
   const pathname = usePathname()
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [shouldShowFeedbackNudge, setShouldShowFeedbackNudge] = useState(false)
+  const [hasShownFeedbackToast, setHasShownFeedbackToast] = useState(false)
+  // Nudge de feedback: mostrar punto y toast después de usar la app un rato
+  useEffect(() => {
+    if (shouldShowFeedbackNudge || hasShownFeedbackToast) return
+
+    const timer = window.setTimeout(() => {
+      setShouldShowFeedbackNudge(true)
+
+      const toastId = toast.info("¿Te está gustando Focus Flow? ¡Cuéntanos tu opinión!", {
+        duration: 8000,
+        action: {
+          label: "Dar feedback",
+          onClick: () => {
+            router.push("/feedback")
+            toast.dismiss(toastId)
+          },
+        },
+        onDismiss: () => {
+          setHasShownFeedbackToast(true)
+        },
+      })
+    }, 600_000) // 10 minutos de uso antes de sugerir feedback
+
+    return () => {
+      window.clearTimeout(timer)
+    }
+  }, [shouldShowFeedbackNudge, hasShownFeedbackToast, router])
+
 
   const handleSignOut = async () => {
     await signOut()
@@ -170,10 +200,47 @@ export default function Navbar({ className = "" }: NavbarProps) {
                 />
               </svg>
             </button>
+
           </div>
 
           {/* Right side - User menu */}
-          <div className="flex items-center">
+          <div className="flex items-center gap-2 md:gap-3">
+            <button
+              onClick={() => router.push("/feedback")}
+              className={`hidden md:inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs transition relative ${
+                shouldShowFeedbackNudge
+                  ? "border-purple-500/60 bg-purple-500/10 text-purple-600 shadow-sm"
+                  : "border-border/60 bg-background/60 text-muted-foreground hover:border-purple-500/30 hover:text-foreground"
+              }`}
+            >
+              {shouldShowFeedbackNudge && (
+                <span className="absolute -top-1 -right-1 inline-flex w-2 h-2 rounded-full bg-purple-500 animate-pulse" aria-hidden />
+              )}
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 20l9-5-9-5-9 5 9 5z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 12l9-5-9-5-9 5 9 5z" />
+              </svg>
+              <span>Feedback</span>
+            </button>
+
+            <button
+              onClick={() => router.push("/feedback")}
+              className={`md:hidden inline-flex items-center justify-center rounded-lg border p-1.5 transition ${
+                shouldShowFeedbackNudge
+                  ? "border-purple-500/60 bg-purple-500/10 text-purple-600 shadow-sm"
+                  : "border-border/60 bg-background/60 text-muted-foreground hover:border-purple-500/30 hover:text-foreground"
+              }`}
+              title="Feedback"
+            >
+              {shouldShowFeedbackNudge && (
+                <span className="absolute -top-1 -right-1 inline-flex w-2 h-2 rounded-full bg-purple-500 animate-pulse" aria-hidden />
+              )}
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 20l9-5-9-5-9 5 9 5z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 12l9-5-9-5-9 5 9 5z" />
+              </svg>
+            </button>
+
             <div className="relative">
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}

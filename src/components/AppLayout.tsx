@@ -3,6 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { usePathname } from 'next/navigation'
 import Navbar from './Navbar'
+import NewUserOnboardingModal from './auth/NewUserOnboardingModal'
 
 interface AppLayoutProps {
   children: React.ReactNode
@@ -36,11 +37,12 @@ export default function AppLayout({ children, showNavbar = true }: AppLayoutProp
   const isCalendarPage = pathname.startsWith('/calendar')
   
   return (
-    <div className={isDashboardPage || isCalendarPage ? 'h-screen bg-background overflow-hidden' : 'min-h-screen bg-background'}>
+    <div className={isDashboardPage || isCalendarPage ? 'h-screen bg-background overflow-hidden relative' : 'min-h-screen bg-background relative'}>
       {showNavbar && <Navbar />}
       <main className={isChatPage ? 'h-screen pt-12' : isDashboardPage || isCalendarPage ? 'h-screen pt-12 overflow-hidden' : showNavbar ? 'pt-12' : ''}>
         {children}
       </main>
+      <NewUserOnboardingModal />
     </div>
   )
 }

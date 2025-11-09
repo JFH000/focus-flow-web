@@ -313,9 +313,7 @@ export default function FocoLayout({
     if (typeof window === 'undefined') return
 
     const handleCloseSidebar = () => {
-      if (window.innerWidth < 768) {
-        setIsSidebarOpen(false)
-      }
+      setIsSidebarOpen(false)
     }
 
     window.addEventListener('closeSidebar', handleCloseSidebar)
@@ -388,10 +386,10 @@ export default function FocoLayout({
           <aside 
             className={`flex flex-col border-r border-purple-500/20 bg-gradient-to-b from-purple-600/5 via-blue-600/5 to-purple-600/5 backdrop-blur-xl shadow-lg transition-all duration-300 ${
               isSidebarOpen 
-                ? 'w-64 translate-x-0' 
+                ? 'w-52 translate-x-0' 
                 : '-translate-x-full md:translate-x-0'
             } ${
-              isSidebarOpen ? '' : 'md:w-16'
+              isSidebarOpen ? '' : 'md:w-12'
             } fixed md:relative left-0 top-0 bottom-0 z-50 md:z-auto`}
           >
             
@@ -486,15 +484,15 @@ export default function FocoLayout({
 
             {/* Contenido cuando está colapsado - SOLO 2 BOTONES MEJORADOS */}
             {!isSidebarOpen && (
-              <div className="flex-1 flex flex-col items-center pt-8 space-y-6">
+              <div className="flex-1 flex flex-col items-center pt-6 space-y-5">
                 {/* Botón Nuevo Chat */}
                 <button
                   onClick={handleNewChat}
-                  className="p-3 text-muted-foreground hover:text-white hover:bg-gradient-to-br hover:from-purple-600 hover:to-blue-600 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg active:scale-95 group"
+                  className="p-2.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-lg transition-colors duration-200 group"
                   title="Nuevo Chat"
                 >
                   <svg 
-                    className="w-6 h-6 group-hover:scale-110 transition-transform duration-200" 
+                    className="w-5 h-5 transition-transform duration-200 group-hover:scale-105" 
                     fill="none" 
                     stroke="currentColor" 
                     viewBox="0 0 24 24"
@@ -514,11 +512,11 @@ export default function FocoLayout({
                 {/* Botón Buscar Chat (Historial) */}
                 <button
                   onClick={openHistoryModal}
-                  className="p-3 text-muted-foreground hover:text-white hover:bg-gradient-to-br hover:from-purple-600 hover:to-blue-600 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg active:scale-95 group"
+                  className="p-2.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-lg transition-colors duration-200 group"
                   title="Buscar Chat"
                 >
                   <svg 
-                    className="w-6 h-6 group-hover:scale-110 transition-transform duration-200" 
+                    className="w-5 h-5 transition-transform duration-200 group-hover:scale-105" 
                     fill="none" 
                     stroke="currentColor" 
                     viewBox="0 0 24 24"

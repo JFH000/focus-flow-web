@@ -212,7 +212,6 @@ function MessageItem({ message }: { message: Message }) {
           <div className="prose prose-sm sm:prose-base max-w-none text-sm sm:text-base">
             {message.content === 'thinking' ? (
               <div className="flex items-center gap-2 py-2">
-                <span className="text-foreground/70 font-medium">IA Foco pensando</span>
                 <div className="flex items-center space-x-1">
                   <div className="w-1.5 h-1.5 bg-purple-600 rounded-full animate-typing-dot"></div>
                   <div className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-typing-dot" style={{ animationDelay: '0.2s' }}></div>
@@ -243,7 +242,7 @@ function MessageItem({ message }: { message: Message }) {
           </span>
           {message.model_used && (
             <span className="ml-2 px-1 py-0.5 bg-primary/20 text-primary rounded text-xs">
-              {message.model_used}
+              {message.model_used === 'n8n-ai' ? 'foco.ia' : message.model_used}
             </span>
           )}
           {message.token_count && (

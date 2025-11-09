@@ -136,6 +136,44 @@ export interface Database {
           created_at?: string
         }
       }
+      feedback: {
+        Row: {
+          id: string
+          user_id: string | null
+          feedback_type: 'issue' | 'idea' | 'praise' | 'other'
+          title: string | null
+          message: string
+          contact: string | null
+          resolved: boolean
+          resolution_notes: string | null
+          resolved_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          feedback_type: 'issue' | 'idea' | 'praise' | 'other'
+          title?: string | null
+          message: string
+          contact?: string | null
+          resolved?: boolean
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          feedback_type?: 'issue' | 'idea' | 'praise' | 'other'
+          title?: string | null
+          message?: string
+          contact?: string | null
+          resolved?: boolean
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          created_at?: string
+        }
+      }
     }
   }
   calendar: {

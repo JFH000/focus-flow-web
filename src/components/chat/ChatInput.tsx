@@ -276,19 +276,19 @@ export default function ChatInput({
         <div className="pb-1 px-4 flex justify-center">
           <div className="w-full max-w-4xl mx-auto">
             {/* All buttons inside the input area */}
-            <div className="flex items-center gap-2 py-1.5 px-3 sm:py-2 sm:px-4 bg-gradient-to-r from-purple-600/10 via-blue-600/10 to-purple-600/10 backdrop-blur-xl shadow-lg rounded-xl sm:rounded-2xl border border-purple-500/20">
+            <div className="flex items-center gap-2 py-1.5 px-3 sm:py-2 sm:px-5 bg-gradient-to-r from-purple-600/10 via-blue-600/10 to-purple-600/10 backdrop-blur-xl shadow-lg rounded-2xl sm:rounded-[2.25rem] border border-purple-500/20">
               {/* File upload button - Always visible */}
               <button
                 type="button"
                 onClick={handleFileButtonClick}
                 disabled={loading || disabled}
                 className="
-                  w-9 h-9 sm:w-8 sm:h-8 text-muted-foreground hover:text-foreground
-                  hover:bg-muted rounded-lg sm:rounded-xl
+                  w-9 h-9 sm:w-9 sm:h-9 text-muted-foreground hover:text-foreground
+                  hover:bg-muted/60 rounded-xl sm:rounded-2xl
                   disabled:opacity-50 disabled:cursor-not-allowed
                   transition-all duration-200
                   flex items-center justify-center
-                  shadow-md active:scale-95
+                  shadow-sm active:scale-95
                 "
                 title="Subir archivos"
               >
@@ -355,7 +355,7 @@ export default function ChatInput({
                   type="submit"
                   disabled={!message.trim() || loading || disabled}
                   className="
-                    w-10 h-10 sm:w-10 sm:h-10 bg-primary text-primary-foreground rounded-lg sm:rounded-xl
+                    w-11 h-11 sm:w-11 sm:h-11 bg-primary text-primary-foreground rounded-2xl sm:rounded-[1.5rem]
                     hover:opacity-90 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed
                     transition-all duration-200
                     flex items-center justify-center

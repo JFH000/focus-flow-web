@@ -10,11 +10,35 @@ import Link from "next/link"
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from "react"
 
+const FEATURES = [
+  {
+    icon: Brain,
+    title: "IA Avanzada",
+    description: "Asistente inteligente que responde tus dudas académicas",
+  },
+  {
+    icon: FileText,
+    title: "Documentos con Memoria",
+    description: "Sube tus apuntes y la IA los recordará",
+  },
+  {
+    icon: Calendar,
+    title: "Calendario Inteligente",
+    description: "Organiza tus exámenes y tareas automáticamente",
+  },
+  {
+    icon: Sparkles,
+    title: "Sincronización",
+    description: "Conecta con Google Calendar y más",
+  },
+] as const
+
 export default function LoginPage() {
   const { user, loading, signInWithGoogle } = useAuth()
   const { theme, toggleTheme, resolvedTheme } = useTheme()
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
+  const [activeFeatureIndex, setActiveFeatureIndex] = useState(0)
 
   useEffect(() => {
     setMounted(true)
@@ -25,6 +49,16 @@ export default function LoginPage() {
       router.push('/')
     }
   }, [user, loading, router])
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setActiveFeatureIndex((prev) => (prev + 1) % FEATURES.length)
+    }, 4000)
+
+    return () => {
+      window.clearInterval(interval)
+    }
+  }, [])
 
   if (loading) {
     return (
@@ -40,29 +74,6 @@ export default function LoginPage() {
   if (user) {
     return null
   }
-
-  const features = [
-    {
-      icon: Brain,
-      title: "IA Avanzada",
-      description: "Asistente inteligente que responde tus dudas académicas",
-    },
-    {
-      icon: FileText,
-      title: "Documentos con Memoria",
-      description: "Sube tus apuntes y la IA los recordará",
-    },
-    {
-      icon: Calendar,
-      title: "Calendario Inteligente",
-      description: "Organiza tus exámenes y tareas automáticamente",
-    },
-    {
-      icon: Sparkles,
-      title: "Sincronización",
-      description: "Conecta con Google Calendar y más",
-    },
-  ]
 
   if (!mounted) {
     return null
@@ -80,8 +91,10 @@ export default function LoginPage() {
     return 'Tema: Claro'
   }
 
+  const rotatingFeature = FEATURES[activeFeatureIndex]
+
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="relative h-screen min-h-screen bg-background flex overflow-hidden">
       {/* Theme Toggle */}
       <button
         onClick={toggleTheme}
@@ -93,12 +106,15 @@ export default function LoginPage() {
       </button>
 
       {/* Left Side - Branding & Features */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary/10 via-primary/5 to-background relative overflow-hidden">
-        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary/5 via-purple-500/5 to-background relative overflow-hidden">
+        <div className="absolute -top-24 -left-20 h-80 w-80 rounded-full bg-primary/25 blur-3xl opacity-60 animate-[pulse_9s_ease_infinite]" />
+        <div className="absolute top-1/4 -right-24 h-72 w-72 rounded-full bg-purple-500/30 blur-3xl opacity-60 animate-[pulse_13s_ease_infinite]" style={{ animationDelay: '2s' }} />
+        <div className="absolute bottom-10 left-1/3 h-64 w-64 rounded-full bg-blue-500/15 blur-3xl opacity-50" />
+        <div className="absolute inset-0 bg-grid-pattern opacity-[0.06]"></div>
 
-        <div className="relative z-10 flex flex-col justify-center px-12 xl:px-20 w-full">
+        <div className="relative z-20 flex flex-col h-full px-12 xl:px-20 py-12">
           {/* Logo */}
-          <Link href="/" className="mb-12 inline-flex items-center gap-3 group">
+          <Link href="/" className="inline-flex items-center gap-3 group">
             <Image
               src="/focusflow-logo-removebg-preview.png"
               alt="FocusFlow Logo"
@@ -111,38 +127,49 @@ export default function LoginPage() {
             </span>
           </Link>
 
-          {/* Headline */}
-          <div className="mb-12">
-            <h1 className="text-4xl xl:text-5xl font-bold mb-4 text-balance">
-              Tu compañero de estudio con{" "}
-              <span className="bg-gradient-to-r from-primary via-purple-500 to-primary bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x">
-                Inteligencia Artificial
-              </span>
-            </h1>
-            <p className="text-lg text-muted-foreground text-balance">
-              Estudia más inteligente, no más difícil. Únete a miles de estudiantes que ya mejoraron sus resultados.
-            </p>
-          </div>
+          <div className="flex-1 flex flex-col justify-center gap-6 mt-10 max-w-xl">
+            {/* Headline */}
+            <div className="space-y-3">
+              <h1 className="text-4xl xl:text-[3.2rem] font-bold text-balance leading-tight">
+                 Tu compañero de estudio con{" "}
+                <span className="relative inline-block px-1">
+                  <span className="absolute -inset-1 rounded-full bg-primary/20 blur-lg opacity-70" aria-hidden="true"></span>
+                  <span className="relative bg-gradient-to-r from-primary via-purple-500 to-primary bg-clip-text text-transparent bg-[length:200%_100%] animate-gradient-x drop-shadow-[0_8px_30px_rgba(129,140,248,0.45)]">
+                    Inteligencia Artificial
+                  </span>
+                </span>
+              </h1>
+              <p className="text-sm xl:text-base text-muted-foreground text-balance">
+                Estudia más inteligente, no más difícil. Únete a miles de estudiantes que ya mejoraron sus resultados.
+              </p>
+            </div>
 
-          {/* Features Grid */}
-          <div className="grid grid-cols-2 gap-4">
-            {features.map((feature, index) => (
-              <Card
-                key={index}
-                className="p-4 bg-card/50 backdrop-blur-sm border-primary/10 hover:border-primary/30 transition-all duration-300 hover:scale-105"
-              >
-                <feature.icon className="w-8 h-8 text-primary mb-3" />
-                <h3 className="font-semibold mb-1">{feature.title}</h3>
-                <p className="text-sm text-muted-foreground">{feature.description}</p>
-              </Card>
-            ))}
+            {/* Features Grid */}
+            <div className="grid grid-cols-2 gap-3">
+              {FEATURES.map((feature, index) => (
+                <Card
+                  key={index}
+                  className={`p-3 bg-card/60 backdrop-blur-sm border-primary/10 transition-all duration-300 ${
+                    activeFeatureIndex === index
+                      ? 'scale-105 border-primary/40 shadow-lg shadow-primary/20'
+                      : 'hover:border-primary/30 hover:scale-[1.02]'
+                  }`}
+                >
+                  <feature.icon className={`w-6 h-6 mb-1.5 ${activeFeatureIndex === index ? 'text-primary' : 'text-primary/70'}`} />
+                  <h3 className="font-semibold text-sm mb-0.5">{feature.title}</h3>
+                  <p className="text-xs text-muted-foreground leading-snug">{feature.description}</p>
+                </Card>
+              ))}
+            </div>
           </div>
         </div>
+
       </div>
 
       {/* Right Side - Login Form */}
-      <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
-        <div className="w-full max-w-md">
+      <div className="flex-1 flex items-center justify-center p-6 lg:p-12 overflow-hidden relative">
+
+        <div className="w-full max-w-md space-y-8 relative z-10">
           {/* Mobile Logo */}
           <Link href="/" className="lg:hidden flex items-center justify-center gap-3 mb-8">
             <Image src="/focusflow-logo-removebg-preview.png" alt="FocusFlow Logo" width={40} height={40} className="rounded-lg" />
@@ -151,7 +178,10 @@ export default function LoginPage() {
             </span>
           </Link>
 
-          <Card className="p-8 shadow-xl border-primary/10">
+          <div className="relative">
+            <div className="absolute -inset-[1.75px] rounded-3xl bg-gradient-to-r from-primary/40 via-purple-500/40 to-blue-500/40 opacity-80 blur-lg" aria-hidden="true"></div>
+            <Card className="group relative p-8 shadow-[0_25px_60px_rgba(79,70,229,0.35)] border border-white/10 bg-card/95 backdrop-blur-lg rounded-3xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_30px_80px_rgba(79,70,229,0.45)] overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold mb-2">Bienvenido de vuelta</h2>
               <p className="text-muted-foreground">Inicia sesión para continuar tu viaje de aprendizaje</p>
@@ -244,7 +274,8 @@ export default function LoginPage() {
               </Link>
               .
             </p>
-          </Card>          
+            </Card>
+          </div>
         </div>
       </div>
     </div>
