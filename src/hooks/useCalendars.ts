@@ -73,7 +73,7 @@ export function useCalendars(): UseCalendarsReturn {
             name: "Primero",
             is_primary: true,
             is_visible: true,
-            is_favorite: false,
+            is_favorite: true,
             metadata: {},
           })
           .select()
