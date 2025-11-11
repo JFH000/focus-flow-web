@@ -32,6 +32,7 @@ export default function CalendarSelector({
   const [isOpen, setIsOpen] = useState(false)
   const [calendarToDelete, setCalendarToDelete] = useState<Calendar | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
 
   const handleToggleVisibility = async (calendar: Calendar) => {
     try {
@@ -109,6 +110,16 @@ export default function CalendarSelector({
     }
   }, [isOpen])
 
+  useEffect(() => {
+    const updateViewport = () => {
+      setIsMobile(window.innerWidth < 640)
+    }
+
+    updateViewport()
+    window.addEventListener('resize', updateViewport)
+    return () => window.removeEventListener('resize', updateViewport)
+  }, [])
+
   return (
     <div className="relative">
       {/* Botón principal - Responsive */}
@@ -149,7 +160,13 @@ export default function CalendarSelector({
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
 
           {/* Panel dropdown - Mismo para móvil y desktop, solo cambia el ancho */}
-          <div className="absolute left-0 right-0 sm:left-auto sm:right-0 mt-2 w-[calc(100vw-8px)] sm:w-96 md:w-80 mx-1 sm:mx-0 bg-background border border-border rounded-lg shadow-xl z-50 max-h-[70vh] md:max-h-96 overflow-hidden flex flex-col">
+          <div
+            className={`${
+              isMobile
+                ? "fixed inset-x-0 bottom-0 mx-3 mb-4 max-h-[80vh] rounded-2xl border-primary/20"
+                : "absolute left-0 right-0 sm:left-auto sm:right-0 mt-2 w-[calc(100vw-8px)] sm:w-96 md:w-80 mx-1 sm:mx-0 max-h-[70vh] md:max-h-96 rounded-lg"
+            } bg-background border border-border shadow-xl z-50 overflow-hidden flex flex-col`}
+          >
             {/* Header */}
             <div className="flex-shrink-0 p-3 border-b border-border flex items-center justify-between">
               <div>

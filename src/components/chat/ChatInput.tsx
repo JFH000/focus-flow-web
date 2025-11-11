@@ -26,9 +26,20 @@ export default function ChatInput({
     totalChunks?: number
     error?: string
   }>>([])
+  const [isMobile, setIsMobile] = useState(false)
   const { sendMessage, loading, currentChat } = useChat()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 640)
+    }
+
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -43,6 +54,7 @@ export default function ChatInput({
     }
 
     await sendMessage(messageToSend, currentChat?.id)
+    textareaRef.current?.blur()
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -276,7 +288,7 @@ export default function ChatInput({
         <div className="pb-1 px-4 flex justify-center">
           <div className="w-full max-w-4xl mx-auto">
             {/* All buttons inside the input area */}
-            <div className="flex items-center gap-2 py-1.5 px-3 sm:py-2 sm:px-5 bg-gradient-to-r from-purple-600/10 via-blue-600/10 to-purple-600/10 backdrop-blur-xl shadow-lg rounded-2xl sm:rounded-[2.25rem] border border-purple-500/20">
+            <div className="flex items-center gap-2 py-1.5 px-3 sm:py-2 sm:px-5 bg-gradient-to-r from-purple-600/10 via-blue-600/10 to-purple-600/10 backdrop-blur-xl shadow-lg rounded-[2.5rem] sm:rounded-[2.75rem] border border-purple-500/20">
               {/* File upload button - Always visible */}
               <button
                 type="button"
@@ -317,7 +329,7 @@ export default function ChatInput({
                     onKeyDown={handleKeyDown}
                     onCompositionStart={() => setIsComposing(true)}
                     onCompositionEnd={() => setIsComposing(false)}
-                    placeholder={placeholder}
+                    placeholder={isMobile ? 'Mensaje...' : placeholder}
                     disabled={loading || disabled}
                     className="
                       w-full min-h-[40px] sm:min-h-[44px] max-h-[120px] px-3 sm:px-4

@@ -47,7 +47,7 @@ export default function NewUserOnboardingModal() {
   }, [age])
 
   const ageError = useMemo(() => {
-    if (!age) return ''
+    if (!age.trim()) return ''
     if (!currentAge) return 'Ingresa una edad válida'
     if (currentAge < 5 || currentAge > 120) return 'Edad fuera de rango'
     return ''
@@ -55,10 +55,11 @@ export default function NewUserOnboardingModal() {
 
   const isFormValid = useMemo(() => {
     if (!fullName.trim()) return false
-    if (!effectiveHowMet) return false
+    if (!age.trim()) return false
     if (ageError) return false
+    if (!effectiveHowMet) return false
     return true
-  }, [fullName, effectiveHowMet, ageError])
+  }, [fullName, age, ageError, effectiveHowMet])
 
   if (!needsOnboarding || onboardingLoading) {
     return null
@@ -88,10 +89,11 @@ export default function NewUserOnboardingModal() {
   }
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-background/85 backdrop-blur-md">
-      <div className="w-full max-w-4xl mx-4 overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-background/95 via-background/90 to-background/95 shadow-[0_40px_120px_rgba(76,29,149,0.35)]">
+    <div className="fixed inset-0 z-[1000] overflow-y-auto bg-background/85 backdrop-blur-md">
+      <div className="min-h-full flex items-center justify-center px-4 py-6 sm:py-10">
+        <div className="w-full max-w-4xl overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-background/95 via-background/90 to-background/95 shadow-[0_40px_120px_rgba(76,29,149,0.35)]">
         <div className="grid gap-8 lg:grid-cols-[1.15fr_1fr]">
-          <div className="relative overflow-hidden p-8 lg:p-12 bg-gradient-to-br from-purple-600/20 via-blue-600/15 to-background">
+          <div className="relative overflow-hidden px-6 py-8 sm:p-10 lg:p-12 bg-gradient-to-br from-purple-600/20 via-blue-600/15 to-background">
             <div className="absolute top-10 right-10 h-24 w-24 rounded-full bg-purple-500/30 blur-3xl" />
             <div className="absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-blue-500/25 blur-3xl" />
 
@@ -121,7 +123,7 @@ export default function NewUserOnboardingModal() {
             </div>
           </div>
 
-          <div className="relative p-8 lg:p-10 flex flex-col gap-6">
+          <div className="relative px-6 py-8 sm:p-10 flex flex-col gap-6">
             {step === 'intro' && (
               <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom duration-500">
                 <div className="flex items-center gap-3 text-primary">
@@ -146,7 +148,7 @@ export default function NewUserOnboardingModal() {
             {step === 'form' && (
               <div className="space-y-5 animate-in fade-in slide-in-from-bottom duration-500">
                 <div>
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Tu nombre</label>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Tu nombre *</label>
                   <input
                     value={fullName}
                     onChange={(event) => setFullName(event.target.value)}
@@ -156,11 +158,11 @@ export default function NewUserOnboardingModal() {
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Edad</label>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Edad *</label>
                   <input
                     value={age}
                     onChange={(event) => setAge(event.target.value.replace(/[^0-9]/g, ''))}
-                    placeholder="Opcional"
+                    placeholder="Ingresa tu edad"
                     inputMode="numeric"
                     className={cn(
                       'mt-1 w-full rounded-xl border border-border bg-background/80 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20',
@@ -171,7 +173,7 @@ export default function NewUserOnboardingModal() {
                 </div>
 
                 <div className="space-y-3">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">¿Cómo conociste Focus Flow?</label>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">¿Cómo conociste Focus Flow? *</label>
                   <div className="grid grid-cols-1 gap-2">
                     {HOW_MET_OPTIONS.map((option) => {
                       const selected = howMet === option
@@ -179,7 +181,12 @@ export default function NewUserOnboardingModal() {
                         <button
                           key={option}
                           type="button"
-                          onClick={() => setHowMet(option)}
+                          onClick={() => {
+                            setHowMet(option)
+                            if (option !== 'Otro') {
+                              setOtherHowMet('')
+                            }
+                          }}
                           className={cn(
                             'rounded-xl border px-4 py-3 text-left text-sm transition',
                             selected
@@ -235,6 +242,7 @@ export default function NewUserOnboardingModal() {
               </div>
             )}
           </div>
+        </div>
         </div>
       </div>
     </div>

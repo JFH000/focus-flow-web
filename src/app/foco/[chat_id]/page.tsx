@@ -14,6 +14,8 @@ export default function ChatPage() {
   const chatId = params.chat_id as string
   const [chatNotFound, setChatNotFound] = useState(false)
   const [isInitialLoad, setIsInitialLoad] = useState(true)
+  const [keyboardOffset, setKeyboardOffset] = useState(0)
+  const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
     if (chatId && currentChat?.id !== chatId) {
@@ -35,6 +37,40 @@ export default function ChatPage() {
       return () => clearTimeout(timer)
     }
   }, [loadingMessages, chatNotFound, router])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 640)
+    }
+
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const viewport = window.visualViewport
+    if (!viewport) return
+
+    const updateOffset = () => {
+      const offset = Math.max(window.innerHeight - viewport.height - viewport.offsetTop, 0)
+      setKeyboardOffset(offset)
+    }
+
+    updateOffset()
+    viewport.addEventListener('resize', updateOffset)
+    viewport.addEventListener('scroll', updateOffset)
+
+    return () => {
+      viewport.removeEventListener('resize', updateOffset)
+      viewport.removeEventListener('scroll', updateOffset)
+    }
+  }, [])
+
+  const bottomSpacing = (isMobile ? keyboardOffset : 0) + 16
 
   if (loadingMessages && isInitialLoad) {
     return (
@@ -81,7 +117,10 @@ export default function ChatPage() {
           <MessageList />
         </div>
         
-        <div className="absolute bottom-4 left-0 right-0 z-10">
+        <div
+          className="absolute left-0 right-0 z-10"
+          style={{ bottom: `${bottomSpacing}px` }}
+        >
           <ChatInput 
             placeholder="Escribe tu mensaje..."
           />
