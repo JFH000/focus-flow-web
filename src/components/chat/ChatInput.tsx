@@ -2,19 +2,22 @@
 
 import { useChat } from '@/contexts/ChatContext'
 import { getSignedFileUrl } from '@/utils/fileAccess'
-import { useEffect, useRef, useState } from 'react'
+import { type CSSProperties, useEffect, useRef, useState } from 'react'
 
 interface ChatInputProps {
   className?: string
   placeholder?: string
   disabled?: boolean
+  style?: CSSProperties
 }
 
 export default function ChatInput({ 
   className = '', 
   placeholder = 'Escribe tu mensaje...',
-  disabled = false 
+  disabled = false,
+  style,
 }: ChatInputProps) {
+  const containerClassName = className ? className : 'relative'
   const [message, setMessage] = useState('')
   const [isComposing, setIsComposing] = useState(false)
   const [uploadingFiles, setUploadingFiles] = useState<Array<{
@@ -39,6 +42,30 @@ export default function ChatInput({
     handleResize()
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  useEffect(() => {
+    const handleQuickPrompt = (event: Event) => {
+      const customEvent = event as CustomEvent<{ message: string }>
+      if (!customEvent.detail || typeof customEvent.detail.message !== 'string') return
+
+      setMessage(customEvent.detail.message)
+
+      requestAnimationFrame(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus()
+          textareaRef.current.style.height = 'auto'
+          textareaRef.current.value = customEvent.detail.message
+          textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`
+          textareaRef.current.setSelectionRange(textareaRef.current.value.length, textareaRef.current.value.length)
+        }
+      })
+    }
+
+    window.addEventListener('chat:quickPrompt', handleQuickPrompt as EventListener)
+    return () => {
+      window.removeEventListener('chat:quickPrompt', handleQuickPrompt as EventListener)
+    }
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -215,7 +242,7 @@ export default function ChatInput({
   }, [])
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={containerClassName} style={style}>
       {/* Uploading Files Overlay */}
       {uploadingFiles.length > 0 && (
         <div className="absolute bottom-full left-0 right-0 mb-2 p-3 bg-background border border-border rounded-lg shadow-lg max-w-md mx-auto">
@@ -282,9 +309,7 @@ export default function ChatInput({
         </div>
       )}
 
-      <div 
-        className="bg-transparent"
-      >
+      <div>
         <div className="pb-1 px-4 flex justify-center">
           <div className="w-full max-w-4xl mx-auto">
             {/* All buttons inside the input area */}

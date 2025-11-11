@@ -93,23 +93,23 @@ export default function NewUserOnboardingModal() {
       <div className="min-h-full flex items-center justify-center px-4 py-6 sm:py-10">
         <div className="w-full max-w-4xl overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-background/95 via-background/90 to-background/95 shadow-[0_40px_120px_rgba(76,29,149,0.35)]">
         <div className="grid gap-8 lg:grid-cols-[1.15fr_1fr]">
-          <div className="relative overflow-hidden px-6 py-8 sm:p-10 lg:p-12 bg-gradient-to-br from-purple-600/20 via-blue-600/15 to-background">
-            <div className="absolute top-10 right-10 h-24 w-24 rounded-full bg-purple-500/30 blur-3xl" />
-            <div className="absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-blue-500/25 blur-3xl" />
+          <div className="relative overflow-hidden px-6 py-8 sm:p-10 lg:p-12 bg-gradient-to-br from-purple-100 via-blue-100 to-white dark:from-purple-600/25 dark:via-blue-600/20 dark:to-background">
+            <div className="absolute top-10 right-10 h-24 w-24 rounded-full bg-purple-300/40 blur-3xl dark:bg-purple-500/30" />
+            <div className="absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-blue-200/40 blur-3xl dark:bg-blue-500/25" />
 
-            <div className="relative space-y-6 text-white">
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs uppercase tracking-[0.35em]">
+            <div className="relative space-y-6 text-slate-900 dark:text-white">
+              <div className="inline-flex items-center gap-2 rounded-full border border-slate-300/60 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-slate-700 shadow-sm dark:border-white/20 dark:bg-white/10 dark:text-white">
                 <Sparkles className="h-4 w-4" />
                 Bienvenida
               </div>
 
-              <h2 className="text-3xl lg:text-[2.4rem] font-bold leading-snug">
+              <h2 className="text-3xl lg:text-[2.4rem] font-bold leading-snug text-slate-900 dark:text-white">
                 {step === 'success'
                   ? '¡Todo listo!'
                   : 'Construyamos tu experiencia Focus Flow'}
               </h2>
 
-              <p className="text-white/80 text-sm lg:text-base leading-relaxed">
+              <p className="text-slate-700/90 text-sm lg:text-base leading-relaxed dark:text-white/80">
                 {step === 'success'
                   ? 'Guardamos tu perfil. En unos segundos te llevaremos a tu panel para que empieces a organizarlo todo con Focus Flow.'
                   : 'Queremos conocerte para recomendarte el mejor camino. Responde estas preguntas rápidas y personalizaremos tu experiencia desde el inicio.'}
@@ -254,10 +254,23 @@ function ProgressStep({ label, active, completed }: { label: string; active: boo
     <div
       className={cn(
         'flex items-center gap-3 rounded-2xl border px-4 py-2 transition',
-        completed ? 'border-white/40 bg-white/15 text-white' : active ? 'border-white/30 bg-white/10 text-white' : 'border-white/10 text-white/70'
+        completed
+          ? 'border-slate-300/60 bg-white/90 text-slate-900 shadow-sm dark:border-white/40 dark:bg-white/15 dark:text-white'
+          : active
+            ? 'border-slate-200/70 bg-white/70 text-slate-900 dark:border-white/30 dark:bg-white/10 dark:text-white'
+            : 'border-slate-200/50 bg-white/60 text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-white/70'
       )}
     >
-      <span className={cn('flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold', completed ? 'bg-white text-purple-600' : active ? 'bg-white/70 text-purple-600' : 'bg-white/10 text-white/70')}>
+      <span
+        className={cn(
+          'flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold',
+          completed
+            ? 'bg-primary text-white shadow-sm dark:bg-white dark:text-purple-600'
+            : active
+              ? 'bg-primary/15 text-primary dark:bg-white/70 dark:text-purple-600'
+              : 'bg-white/70 text-slate-500 dark:bg-white/10 dark:text-white/70'
+        )}
+      >
         {completed ? <Check className="h-4 w-4" /> : active ? '•' : ''}
       </span>
       <span className="text-xs font-medium tracking-wide uppercase">{label}</span>

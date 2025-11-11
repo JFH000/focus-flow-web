@@ -36,10 +36,23 @@ export default function AppLayout({ children, showNavbar = true }: AppLayoutProp
   const isDashboardPage = pathname.startsWith('/dashboard')
   const isCalendarPage = pathname.startsWith('/calendar')
   
+  const mainClasses = (() => {
+    if (isChatPage) {
+      return 'min-h-[100dvh] pt-12 flex flex-col overflow-hidden'
+    }
+    if (isDashboardPage || isCalendarPage) {
+      return 'h-screen pt-12 overflow-hidden'
+    }
+    if (showNavbar) {
+      return 'pt-12'
+    }
+    return ''
+  })()
+
   return (
     <div className={isDashboardPage || isCalendarPage ? 'h-screen bg-background overflow-hidden relative' : 'min-h-screen bg-background relative'}>
       {showNavbar && <Navbar />}
-      <main className={isChatPage ? 'h-screen pt-12' : isDashboardPage || isCalendarPage ? 'h-screen pt-12 overflow-hidden' : showNavbar ? 'pt-12' : ''}>
+      <main className={mainClasses}>
         {children}
       </main>
       <NewUserOnboardingModal />

@@ -52,15 +52,17 @@ export default function FocoPage() {
   return (
     <div className="h-full flex flex-col overflow-hidden">
       <div className="flex-1 overflow-hidden relative pb-12 sm:pb-0">
-        <div className="h-full overflow-y-auto">
+        <div className="h-full">
           <MessageList />
         </div>
         
         <div
-          className="fixed sm:absolute left-0 right-0 z-10 bg-background/80 backdrop-blur-sm sm:bg-transparent sm:backdrop-blur-none"
+          className="fixed sm:absolute left-0 right-0 z-10 pointer-events-none"
           style={{ bottom: `${bottomSpacing}px` }}
         >
-          <ChatInput placeholder="¿En qué puedo ayudarte hoy?" />
+          <div className="pointer-events-auto w-full">
+            <ChatInput placeholder="¿En qué puedo ayudarte hoy?" />
+          </div>
         </div>
       </div>
     </div>
