@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client"
 import type { Calendar, CalendarInsert, CalendarUpdate, CalendarWithStats } from "@/types/database"
-import { useCallback, useEffect, useState, useMemo } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 
 interface UseCalendarsReturn {
   calendars: Calendar[]
@@ -58,6 +58,36 @@ export function useCalendars(): UseCalendarsReturn {
       if (fetchError) {
         console.error("Error detallado al cargar calendarios:", fetchError)
         throw new Error(`Error al cargar calendarios: ${fetchError.message || JSON.stringify(fetchError)}`)
+      }
+
+      if (!data || data.length === 0) {
+        console.info("🗓️ El usuario no tiene calendarios; creando calendario por defecto")
+
+        const {
+          data: defaultCalendar,
+          error: insertError,
+        } = await supabase
+          .from("calendar_calendars")
+          .insert({
+            owner_id: user.id,
+            name: "Primero",
+            is_primary: true,
+            is_visible: true,
+            is_favorite: false,
+            metadata: {},
+          })
+          .select()
+          .single()
+
+        if (insertError) {
+          console.error("Error creando calendario por defecto:", insertError)
+          throw new Error(`No se pudo crear el calendario por defecto: ${insertError.message || JSON.stringify(insertError)}`)
+        }
+
+        if (defaultCalendar) {
+          setCalendars(sortCalendars([defaultCalendar]))
+        }
+        return
       }
 
       setCalendars(sortCalendars(data || []))
